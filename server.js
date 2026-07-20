@@ -492,7 +492,13 @@ function serveStatic(req, res) {
       return;
     }
     const ext = path.extname(fullPath).toLowerCase();
-    res.writeHead(200, { "Content-Type": MIME[ext] || "application/octet-stream" });
+    const headers = { "Content-Type": MIME[ext] || "application/octet-stream" };
+
+    if (filePath.startsWith("/assets/")) {
+      headers["Cache-Control"] = "public, max-age=31536000, immutable";
+    }
+
+    res.writeHead(200, headers);
     res.end(data);
   });
 }

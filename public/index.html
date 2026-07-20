@@ -1411,6 +1411,19 @@ const CARD_BACK_IMAGE = CARD_DIR + "back side card.png";
 function cardImageSrc(card) {
   return encodeURI(`${CARD_DIR}${SUIT_TO_LETTER[card.suit]}${RANK_TO_LETTER[card.rank]}.png`);
 }
+function preloadCardImages() {
+  for (const suit of Object.keys(SUIT_TO_LETTER)) {
+    for (const rank of Object.keys(RANK_TO_LETTER)) {
+      const image = new Image();
+      image.src = cardImageSrc({ suit, rank });
+    }
+  }
+
+  const back = new Image();
+  back.src = encodeURI(CARD_BACK_IMAGE);
+}
+
+preloadCardImages();
 
 // Design-space coordinates (1000 x 700 stage, scaled to fit viewport).
 const SEAT_POS = {
