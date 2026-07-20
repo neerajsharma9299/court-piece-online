@@ -1,0 +1,2629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Court Piece</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --felt-dark: #0a3527;
+    --felt-mid: #0e4633;
+    --felt-light: #135a41;
+    --brass: #c9a24b;
+    --brass-bright: #e0bd6a;
+    --brass-dark: #8a6b23;
+    --cream: #f3ead9;
+    --ink: #1c140c;
+    --red-suit: #ad3b2e;
+    --black-suit: #201a14;
+    --shadow: rgba(0, 0, 0, 0.45);
+
+    --font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: #050f0a;
+    overflow: hidden;
+    font-family: var(--font-body);
+  }
+
+  #stage-wrap {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #stage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1000px;
+    height: 700px;
+    transform: translate(-50%, -50%);
+    background-color: #0b5d3b;   /* felt green */
+    background-image: none;
+    border-radius: 28px;
+    box-shadow:
+      0 0 0 10px #2a1a0e,
+      0 0 0 14px var(--brass-dark),
+      0 30px 80px var(--shadow);
+    overflow: hidden;
+  }
+
+  /* ---------- HUD panels ---------- */
+
+  .panel {
+    position: absolute;
+    top: 16px;
+    background: rgba(10, 20, 14, 0.72);
+    border: 1.5px solid var(--brass);
+    border-radius: 14px;
+    padding: 10px 18px;
+    color: var(--cream);
+    text-align: center;
+    backdrop-filter: blur(2px);
+        margin-left: 141px;
+  
+  }
+  .center_box{  
+    margin-left: 175px;
+  }
+
+  .panel-label {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--brass-bright);
+    margin: 0 0 2px;
+  }
+  .label-short { display: none; }
+
+  .panel-value {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  #round-panel { left: 20px; width: 165px; }
+  #tally-panel { left: 50%; transform: translateX(-50%); width: 220px; }
+  #score-panel { right: 20px; width: 165px; }
+
+  /* ---------- Seats ---------- */
+
+  .seat {
+    position: absolute;
+    width: 140px;
+    height: 110px;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    transition: filter 0.25s;
+  }
+
+  #seat-1 { left: 70px; top: 345px; }
+  #seat-2 { left: 500px; top: 55px; }
+  #seat-3 { left: 930px; top: 345px; }
+
+  .seat-name {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--cream);
+      margin-top: 5px;
+      letter-spacing: 0.02em;
+      text-align: center;
+      line-height: 1.2;
+  }
+
+  .player-real-name {
+      display: block;
+      margin-top: 4px;
+      font-size: 14px;
+      color: #f3e7c0;
+      font-weight: 500;
+  }
+  .dealer-label {
+      display: block;
+      font-size: 12px;
+      font-weight: bold;
+      margin-top: 3px;
+  }
+  .seat.active-turn .seat-name {
+    color: var(--brass-bright);
+    text-shadow: 0 0 10px rgba(224, 189, 106, 0.7);
+  }
+  .role-icon {
+    display: inline-block;
+  }
+
+  .hidden-stack {
+    position: relative;
+    width: 64px;
+    height: 88px;
+    margin: 0 auto;
+  }
+
+  .pool-marker {
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    width: 72px;
+    height: 72px;
+  }
+
+  #hand-pool-marker {
+    position: absolute;
+    left: 500px;
+    top: 490px;
+    transform: translate(-50%, -50%);
+    display: none;
+  }
+
+  .pool-chip {
+    position: absolute;
+    width: 38px;
+    height: 52px;
+    background: linear-gradient(160deg, var(--brass-bright), var(--brass-dark));
+    border: 2px solid var(--cream);
+    border-radius: 6px;
+  }
+
+  .pool-badge {
+    position: absolute;
+    top: -14px;
+    right: -14px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--red-suit);
+    border: 2px solid var(--cream);
+    color: var(--cream);
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ---------- Cards ---------- */
+
+  .card {
+      position: absolute;
+      width: 84px;
+      height: 118px;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 6px 16px rgba(0,0,0,.45);
+      user-select: none;
+      cursor: default;
+      background: transparent;
+  }
+
+  .card-back {
+      width: 52px;
+      height: 74px;
+      object-fit: contain;
+  }
+  .hand-card {
+    cursor: pointer;
+    transition: top 0.15s ease, box-shadow 0.15s ease;
+  }
+  .hand-card:hover {
+      transform: translateY(-18px) scale(1.05);
+      box-shadow: 0 12px 24px rgba(0,0,0,.55);
+      z-index: 500;
+  }
+
+  .table-card {
+    transition: none;
+  }
+
+  #hand, #table-cards {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  #hand { pointer-events: auto; }
+  #hand .hand-card { pointer-events: auto; }
+
+  /* ---------- Trump / challenge overlays ---------- */
+
+  .overlay-panel {
+    position: absolute;
+    left: 50%;
+    top: 235px;
+    transform: translateX(-50%);
+    display: none;
+    text-align: center;
+    z-index: 20;
+  }
+
+  .overlay-panel.visible { display: block; }
+
+  .overlay-title {
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--cream);
+    text-shadow: 0 2px 6px var(--shadow);
+    margin-bottom: 16px;
+  }
+
+  .suit-btn, .yesno-btn {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 17px;
+    padding: 12px 22px;
+    margin: 0 6px;
+    border-radius: 10px;
+    border: 1.5px solid var(--brass);
+    background: rgba(10, 20, 14, 0.85);
+    color: var(--cream);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+
+  .suit-btn:hover, .yesno-btn:hover {
+    background: var(--brass-dark);
+    transform: translateY(-2px);
+  }
+
+  .suit-btn:focus-visible, .yesno-btn:focus-visible {
+    outline: 3px solid var(--brass-bright);
+    outline-offset: 2px;
+  }
+
+  #challenge-thinking {
+    font-family: var(--font-body);
+    color: var(--cream);
+    font-size: 16px;
+    display: none;
+  }
+
+  /* ---------- Banners ---------- */
+
+  .banner {
+    position: absolute;
+    left: 50%;
+    top: 200px;
+    transform: translate(-50%, -20px);
+    background: rgba(10, 12, 8, 0.9);
+    border: 2px solid var(--brass-bright);
+    border-radius: 14px;
+    padding: 14px 28px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 24px;
+    color: var(--brass-bright);
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 30;
+    max-width: 520px;
+  }
+
+  .banner.visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  #round-banner { top: 340px; color: #fff2c4; }
+
+  #follow-suit-toast {
+    top: 500px;
+    font-size: 17px;
+    color: var(--cream);
+    border-color: var(--red-suit);
+  }
+
+  /* ---------- Intro ---------- */
+
+  #intro-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(4, 12, 8, 0.92);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    transition: opacity 0.4s;
+  }
+
+  #intro-overlay.visible { display: flex; }
+  #intro-overlay:not(.visible) { display: none; }
+
+  #intro-title {
+    font-family: var(--font-display);
+    font-size: 64px;
+    font-weight: 700;
+    color: var(--brass-bright);
+    letter-spacing: 0.03em;
+    margin: 0 0 6px;
+  }
+
+  #intro-subtitle {
+    font-family: var(--font-body);
+    color: var(--cream);
+    opacity: 0.8;
+    margin: 0 0 40px;
+    font-size: 15px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  #intro-text {
+    font-family: var(--font-body);
+    color: var(--cream);
+    font-size: 18px;
+    margin-bottom: 24px;
+    min-height: 24px;
+  }
+
+  #intro-button {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 18px;
+    padding: 14px 40px;
+    border-radius: 10px;
+    border: 1.5px solid var(--brass);
+    background: var(--brass-dark);
+    color: var(--cream);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+
+  #intro-button:hover {
+    background: var(--brass);
+    color: var(--ink);
+    transform: translateY(-2px);
+  }
+
+  /* ---------- Menu / Lobby / How-to-play (full viewport, above everything) ---------- */
+
+  .full-overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, #0e4633 0%, #04120b 100%);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 20px;
+  }
+
+  .full-overlay.visible { display: flex; }
+
+  .menu-title {
+    font-family: var(--font-display);
+    font-size: 72px;
+    font-weight: 700;
+    color: var(--brass-bright);
+    letter-spacing: 0.03em;
+    margin: 0 0 6px;
+    text-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  }
+
+  .menu-subtitle {
+    font-family: var(--font-body);
+    color: var(--cream);
+    opacity: 0.75;
+    margin: 0 0 44px;
+    font-size: 14px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .menu-btn {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 18px;
+    padding: 16px 46px;
+    margin: 7px 0;
+    border-radius: 10px;
+    border: 1.5px solid var(--brass);
+    background: rgba(10, 20, 14, 0.85);
+    color: var(--cream);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    width: 280px;
+  }
+
+  .menu-btn.primary {
+    background: var(--brass-dark);
+  }
+
+  .menu-btn:hover {
+    background: var(--brass);
+    color: var(--ink);
+    transform: translateY(-2px);
+  }
+
+  .menu-btn:focus-visible {
+    outline: 3px solid var(--brass-bright);
+    outline-offset: 2px;
+  }
+
+  .menu-btn.small {
+    width: auto;
+    padding: 10px 22px;
+    font-size: 15px;
+  }
+
+  /* ---------- How to play ---------- */
+
+  .how-to-play-panel {
+    background: rgba(10, 20, 14, 0.92);
+    border: 2px solid var(--brass);
+    border-radius: 18px;
+    padding: 34px 40px;
+    max-width: 560px;
+    max-height: 78vh;
+    overflow-y: auto;
+    color: var(--cream);
+    font-family: var(--font-body);
+    line-height: 1.65;
+  }
+
+  .how-to-play-panel h2 {
+    font-family: var(--font-display);
+    color: var(--brass-bright);
+    font-size: 28px;
+    margin-top: 0;
+  }
+
+  .how-to-play-panel h3 {
+    font-family: var(--font-display);
+    color: var(--brass-bright);
+    font-size: 19px;
+    margin-bottom: 6px;
+  }
+
+  .how-to-play-panel p { margin: 0 0 14px; font-size: 15px; }
+
+  /* ---------- Lobby ---------- */
+
+  .lobby-panel {
+    background: rgba(10, 20, 14, 0.9);
+    border: 2px solid var(--brass);
+    border-radius: 18px;
+    padding: 34px 40px;
+    width: 420px;
+    color: var(--cream);
+    font-family: var(--font-body);
+    text-align: center;
+  }
+
+  .lobby-panel h2 {
+    font-family: var(--font-display);
+    color: var(--brass-bright);
+    font-size: 26px;
+    margin-top: 0;
+  }
+
+  .lobby-field {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 14px;
+    text-align: left;
+  }
+
+  .lobby-field label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--brass-bright);
+    margin-bottom: 5px;
+  }
+
+  .lobby-field input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1.5px solid var(--brass);
+    background: rgba(255,255,255,0.06);
+    color: var(--cream);
+    font-family: var(--font-body);
+    font-size: 15px;
+  }
+
+  .lobby-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .lobby-row .lobby-field { flex: 1; margin-bottom: 0; }
+
+  .lobby-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--brass-bright);
+    font-size: 12px;
+    text-transform: uppercase;
+    margin: 22px 0;
+  }
+
+  .lobby-divider::before, .lobby-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(201,162,75,0.4);
+  }
+
+  #lobby-status {
+    min-height: 20px;
+    font-size: 14px;
+    color: #ffb4a8;
+    margin-top: 12px;
+  }
+
+  #lobby-room-info {
+    display: none;
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(201,162,75,0.35);
+  }
+
+  #lobby-room-info.visible { display: block; }
+
+  #lobby-room-code {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--brass-bright);
+    letter-spacing: 0.1em;
+    margin: 4px 0 14px;
+  }
+
+  #lobby-player-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 16px;
+    font-size: 14px;
+    text-align: left;
+  }
+
+  #lobby-player-list li {
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .friend-section { margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(201,162,75,0.35); text-align: left; }
+  .friend-section h3 { margin: 0 0 8px; color: var(--brass-bright); font-size: 14px; text-transform: uppercase; letter-spacing: .06em; }
+  .friend-id { padding: 9px; border-radius: 7px; background: rgba(255,255,255,.07); color: var(--brass-bright); font-family: monospace; text-align: center; user-select: all; }
+  .friend-list { list-style: none; padding: 0; margin: 10px 0 0; max-height: 130px; overflow-y: auto; }
+  .friend-list li { display: flex; gap: 8px; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.08); font-size: 13px; }
+  .friend-list button { border: 1px solid var(--brass); border-radius: 6px; background: transparent; color: var(--cream); padding: 4px 7px; cursor: pointer; }
+
+  /* ================================================================
+     MOBILE RESPONSIVE OVERRIDES
+     Same stage, same seat/card positions, same game rules -- only
+     SIZES/LAYOUT change so everything is legible and non-overlapping
+     on a phone screen. On mobile the stage becomes the full viewport
+     itself; seats sit pinned to the edges and the human hand sits
+     fixed at the bottom (matches the reference screenshot).
+     ================================================================ */
+  @media (max-width: 700px) {
+
+    #stage-wrap { padding: 0; }
+
+    #stage {
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100dvh;
+      transform: none !important;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    /* ---- HUD panels: fixed non-overlapping thirds across the top ---- */
+    .panel {
+      margin-left: 0;
+      padding: 5px 6px;
+      border-radius: 10px;
+      border-width: 1.5px;
+      top: 6px;
+    }
+    .center_box { margin-left: 0; }
+
+    .panel-label {
+      font-size: 8.5px;
+      letter-spacing: 0.02em;
+      margin: 0 0 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .panel-value {
+      font-size: 17px;
+    }
+
+    #round-panel   { left: 2vw;  width: 26vw; }
+    #tally-panel   { left: 50%; transform: translateX(-50%); width: 34vw; }
+    #score-panel   { right: 2vw; left: auto; width: 26vw; }
+
+    /* Short label for the middle panel so it never wraps/widens */
+    .label-full { display: none; }
+    .label-short { display: inline; }
+
+    #trump-panel-holder {
+      left: 50% !important;
+      top: 52px !important;
+      transform: translateX(-50%) !important;
+      font-size: 12px !important;
+    }
+
+    /* ---- Seats ---- */
+    .seat { width: 90px; height: 110px; }
+
+    #seat-1 { left: 13vw; top: 46vh; }
+    #seat-2 { left: 50vw; top: 17vh; }
+    #seat-3 { left: 87vw; top: 46vh; }
+
+    .seat-name {
+      font-size: 15px;
+    }
+    .player-real-name {
+      font-size: 12px;
+    }
+    .dealer-label {
+      font-size: 11px;
+    }
+    /* The teammate handshake / opponent icon -- small, not a giant emoji */
+    .role-icon {
+      display: inline-block;
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    .hidden-stack {
+      width: 60px;
+      height: 84px;
+    }
+    .card-back {
+      width: 46px;
+      height: 64px;
+    }
+
+    /* ---- Player's own hand: large + clear at the bottom ---- */
+    #hand .card {
+      width: 82px;
+      height: 114px;
+      border-radius: 8px;
+      box-shadow: 0 6px 16px rgba(0,0,0,.55);
+    }
+    #hand { bottom: 0; }
+
+    /* ---- Table (played) cards ---- */
+    #table-cards .card {
+      width: 78px;
+      height: 108px;
+    }
+
+    /* ---- Pool markers / capture chips ---- */
+    #hand-pool-marker { left: 50vw; top: 66vh; }
+    .pool-marker {
+      width: 60px;
+      height: 60px;
+    }
+    .pool-chip {
+      width: 32px;
+      height: 44px;
+    }
+    .pool-badge {
+      width: 26px;
+      height: 26px;
+      font-size: 13px;
+    }
+
+    /* ---- Trump choice + challenge popup ---- */
+    .overlay-panel { top: 32vh; }
+    .overlay-title {
+      font-size: 26px;
+      margin-bottom: 14px;
+    }
+    .suit-btn, .yesno-btn {
+      font-size: 16px;
+      padding: 11px 18px;
+      margin: 4px;
+      border-radius: 10px;
+      border-width: 1.5px;
+    }
+    #challenge-thinking {
+      font-size: 14px;
+    }
+
+    /* ---- Banners ---- */
+    #round-banner { top: 24vh; }
+    #capture-banner { top: 32vh; }
+    #follow-suit-toast { top: 56vh; }
+    .banner {
+      font-size: 18px;
+      padding: 12px 22px;
+      border-radius: 12px;
+      border-width: 2px;
+      max-width: 90vw;
+    }
+
+    /* Menu button removed -- back-button/exit confirmation (in JS)
+       handles returning to the menu instead. */
+
+    /* ---- Intro overlay ---- */
+    #intro-title { font-size: 42px; }
+    #intro-subtitle { font-size: 13px; }
+    #intro-text { font-size: 16px; }
+    #intro-button {
+      font-size: 17px;
+      padding: 13px 34px;
+    }
+
+    /* ---- Main menu / how-to-play / lobby ---- */
+    .menu-title { font-size: 44px; }
+    .menu-subtitle { font-size: 12px; }
+    .menu-btn {
+      font-size: 16px;
+      padding: 15px 0;
+      width: 80vw;
+    }
+    .menu-btn.small {
+      width: auto;
+      font-size: 14px;
+      padding: 9px 20px;
+    }
+
+    .how-to-play-panel {
+      padding: 22px 18px;
+      max-width: 92vw;
+    }
+    .how-to-play-panel h2 { font-size: 24px; }
+    .how-to-play-panel h3 { font-size: 17px; }
+    .how-to-play-panel p { font-size: 14px; }
+
+    .lobby-panel {
+      width: 90vw;
+      padding: 24px 18px;
+    }
+    .lobby-panel h2 { font-size: 22px; }
+    .lobby-field label { font-size: 11px; }
+    .lobby-field input {
+      font-size: 15px;
+      padding: 10px 12px;
+    }
+    #lobby-room-code { font-size: 28px; }
+    #lobby-player-list { font-size: 14px; }
+    #lobby-status { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="stage-wrap">
+  <div id="stage">
+
+    <div id="round-panel" class="panel">
+      <p class="panel-label">Round</p>
+      <p class="panel-value" id="round-panel-text">1</p>
+    </div>
+
+    <div id="tally-panel" class="panel center_box">
+      <p class="panel-label"><span class="label-full">Tricks &middot; Team 1 - Team 2</span><span class="label-short">Tricks</span></p>
+      <p class="panel-value" id="tally-panel-text">0 - 0</p>
+    </div>
+
+    <div id="score-panel" class="panel">
+      <p class="panel-label">Match Score</p>
+      <p class="panel-value" id="score-panel-text">0 - 0</p>
+    </div>
+
+    <div id="trump-panel-holder" style="position:absolute; left:23%; top:95px; transform:translateX(-50%); color:var(--cream); font-family:var(--font-body); font-size:14px; z-index:5;">
+      <span id="trump-panel-text">Trump: -</span>
+    </div>
+
+    <!-- Bot seats -->
+    <div id="seat-1" class="seat">
+      <div class="hidden-stack"></div>
+      <div class="pool-marker"></div>
+      <div class="seat-name">Player 2</div>
+    </div>
+    <div id="seat-2" class="seat">
+      <div class="hidden-stack"></div>
+      <div class="pool-marker"></div>
+      <div class="seat-name">Player 3</div>
+    </div>
+    <div id="seat-3" class="seat">
+      <div class="hidden-stack"></div>
+      <div class="pool-marker"></div>
+      <div class="seat-name">Player 4</div>
+    </div>
+
+    <div id="hand-pool-marker"></div>
+
+    <div id="table-cards"></div>
+    <div id="hand"></div>
+
+    <!-- Trump choice buttons -->
+    <div id="trump-buttons" class="overlay-panel">
+      <div class="overlay-title">Choose Trump</div>
+      <button class="suit-btn" data-suit="Spades">&#9824; Spades</button>
+      <button class="suit-btn" data-suit="Hearts">&#9829; Hearts</button>
+      <button class="suit-btn" data-suit="Diamonds">&#9830; Diamonds</button>
+      <button class="suit-btn" data-suit="Clubs">&#9827; Clubs</button>
+    </div>
+
+    <!-- Challenge (change trump) popup -->
+    <div id="challenge-popup" class="overlay-panel">
+      <div class="overlay-title" id="challenge-title"></div>
+      <div id="challenge-yes-no">
+        <button class="yesno-btn" id="challenge-yes">Change Trump</button>
+        <button class="yesno-btn" id="challenge-no">Keep Trump</button>
+      </div>
+      <div id="challenge-thinking"></div>
+    </div>
+
+    <div id="capture-banner" class="banner"></div>
+    <div id="round-banner" class="banner"></div>
+    <div id="follow-suit-toast" class="banner">You must follow the suit!</div>
+
+    <!-- Intro / jack toss -->
+    <div id="intro-overlay"  class="visible">
+      <h1 id="intro-title">Court Piece</h1>
+      <p id="intro-subtitle">A trick-taking card game for four</p>
+      <p id="intro-text"></p>
+      <button id="intro-button">Draw for Dealer</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Main menu -->
+<div id="menu-overlay" class="full-overlay visible">
+  <h1 class="menu-title">Court Piece</h1>
+  <p class="menu-subtitle">A trick-taking card game for four</p>
+  <button id="menu-play-bots" class="menu-btn primary">Play vs Bots</button>
+  <button id="menu-play-online" class="menu-btn primary">Play Online</button>
+  <button id="menu-how-to-play" class="menu-btn">How to Play</button>
+</div>
+
+<!-- How to play -->
+<div id="how-to-play-overlay" class="full-overlay">
+  <div class="how-to-play-panel">
+    <h2>How to Play</h2>
+    <p>Court Piece is a 4-player trick-taking game, played in two fixed
+    teams: you and the player across from you versus the other two.</p>
+
+    <h3>Trump &amp; Challenge</h3>
+    <p>Each round, the dealer's left-hand player picks the trump suit.
+    Going around the table, every other player then gets one chance to
+    change the trump instead -- the dealer gets the final say. If someone
+    changes it, their team must win <strong>all 13 tricks</strong> to
+    score; if the other team wins two tricks in a row, the challenge
+    fails instantly.</p>
+
+    <h3>Tricks &amp; Capturing</h3>
+    <p>Follow the suit that was led if you can. Highest card of the led
+    suit wins the trick -- unless someone plays trump, which beats
+    everything. Tricks don't score immediately: they pile up until one
+    player wins <strong>two in a row</strong>, at which point they claim
+    the whole pile. The 13th trick always goes to whoever wins it,
+    streak or not.</p>
+
+    <h3>Winning a Round</h3>
+    <p>In a normal round, the trump-holding team needs 8 of the 13
+    tricks. Win all 13 and it's a "court" -- an automatic point. First
+    team to 5 round points wins the match.</p>
+
+    <button id="how-to-play-close" class="menu-btn small" style="margin-top: 10px;">Close</button>
+  </div>
+</div>
+
+<!-- Online lobby -->
+<div id="lobby-overlay" class="full-overlay">
+  <div class="lobby-panel">
+    <h2>Play Online</h2>
+
+    <div class="lobby-field">
+      <label for="lobby-name">Your name</label>
+      <input id="lobby-name" type="text" maxlength="20" placeholder="Player">
+    </div>
+
+    <div id="lobby-server-row" class="lobby-field" style="display:none;">
+      <label for="lobby-server">Server address (host:port)</label>
+      <input id="lobby-server" type="text" placeholder="localhost:8080">
+    </div>
+
+    <button id="lobby-create" class="menu-btn primary" style="width:100%;">Create Room</button>
+
+    <div class="lobby-divider">or join a room</div>
+
+    <div class="lobby-row">
+      <div class="lobby-field">
+        <label for="lobby-code">Room code</label>
+        <input id="lobby-code" type="text" maxlength="6" placeholder="ABCDE">
+      </div>
+      <button id="lobby-join" class="menu-btn small">Join</button>
+    </div>
+
+    <p id="lobby-status"></p>
+
+    <div id="lobby-room-info">
+      <label style="font-size:12px; text-transform:uppercase; letter-spacing:0.06em; color:var(--brass-bright);">Room code -- share with friends</label>
+      <div id="lobby-room-code">-----</div>
+      <ul id="lobby-player-list"></ul>
+      <button id="lobby-start-bots" class="menu-btn primary" style="width:100%; display:none;">Start Now (fill empty seats with bots)</button>
+    </div>
+
+    <div class="friend-section">
+      <h3>Your Player ID</h3>
+      <div id="friend-my-id" class="friend-id">Connect to get your ID</div>
+      <div class="lobby-row" style="margin-top:10px;">
+        <div class="lobby-field"><label for="friend-id-input">Friend's Player ID</label><input id="friend-id-input" maxlength="16" placeholder="CP-XXXXXX"></div>
+        <button id="friend-add" class="menu-btn small">Add</button>
+      </div>
+      <ul id="friend-requests" class="friend-list"></ul>
+      <ul id="friend-list" class="friend-list"></ul>
+    </div>
+
+    <button id="lobby-back" class="menu-btn small" style="margin-top: 18px;">Back to Menu</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// ENGINE (ported from game.py / rules.py / bot.py / player.py)
+// ============================================================
+// ============================================================
+// Court Piece -- game engine (ported from the Python codebase)
+// No DOM/rendering code lives here -- this file is the same
+// "rules brain" as game.py + rules.py + bot.py + player.py,
+// so it can be tested on its own before wiring up the UI.
+// ============================================================
+
+const SUITS = ["Spades", "Hearts", "Diamonds", "Clubs"];
+const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King", "Ace"];
+
+const RANK_VALUES = {
+  "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9,
+  "10": 10, "Jack": 11, "Queen": 12, "King": 13, "Ace": 14
+};
+
+const SUIT_ORDER = { Spades: 0, Hearts: 1, Diamonds: 2, Clubs: 3 };
+
+function cardValue(card) {
+  return RANK_VALUES[card.rank];
+}
+
+// ---------------- Deck ----------------
+
+class Deck {
+  constructor() {
+    this.cards = [];
+    this.createDeck();
+  }
+
+  createDeck() {
+    this.cards = [];
+    for (const suit of SUITS) {
+      for (const rank of RANKS) {
+        this.cards.push({ rank, suit });
+      }
+    }
+  }
+
+  shuffle() {
+    for (let i = this.cards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
+    }
+  }
+
+  dealCard() {
+    if (this.cards.length === 0) return null;
+    return this.cards.pop();
+  }
+}
+
+// ---------------- Rules ----------------
+// Mirrors engine/rules.py exactly. playedCards is an array of
+// [playerIndex, card] pairs. Returns the winning playerIndex.
+
+const Rules = {
+  determineWinner(playedCards, trump) {
+    const leadSuit = playedCards[0][1].suit;
+
+    let winningIndex = playedCards[0][0];
+    let winningCard = playedCards[0][1];
+
+    for (let i = 1; i < playedCards.length; i++) {
+      const [playerIndex, card] = playedCards[i];
+
+      if (card.suit === trump && winningCard.suit !== trump) {
+        winningIndex = playerIndex;
+        winningCard = card;
+      } else if (card.suit === trump && winningCard.suit === trump) {
+        if (cardValue(card) > cardValue(winningCard)) {
+          winningIndex = playerIndex;
+          winningCard = card;
+        }
+      } else if (
+        winningCard.suit !== trump &&
+        card.suit === leadSuit &&
+        winningCard.suit === leadSuit
+      ) {
+        if (cardValue(card) > cardValue(winningCard)) {
+          winningIndex = playerIndex;
+          winningCard = card;
+        }
+      }
+    }
+
+    return winningIndex;
+  }
+};
+
+// ---------------- Bot AI ----------------
+// Mirrors ai/bot.py exactly.
+
+const Bot = {
+  beats(card1, card2, leadSuit, trump) {
+    if (card1.suit === card2.suit) {
+      return cardValue(card1) > cardValue(card2);
+    }
+    if (card1.suit === trump && card2.suit !== trump) return true;
+    if (card2.suit === trump && card1.suit !== trump) return false;
+    if (card1.suit === leadSuit && card2.suit !== leadSuit) return true;
+    return false;
+  },
+
+  chooseCard(playerIndex, hand, leadSuit, playedCards, trump) {
+    let validCards = hand;
+
+    if (leadSuit !== null) {
+      const suitCards = hand.filter((c) => c.suit === leadSuit);
+      if (suitCards.length > 0) validCards = suitCards;
+    }
+
+    const lowest = (cards) =>
+      cards.reduce((min, c) => (cardValue(c) < cardValue(min) ? c : min), cards[0]);
+
+    if (playedCards.length === 0) {
+      return lowest(validCards);
+    }
+
+    let currentWinnerIndex = playedCards[0][0];
+    let currentWinnerCard = playedCards[0][1];
+
+    for (let i = 1; i < playedCards.length; i++) {
+      const [idx, card] = playedCards[i];
+      if (this.beats(card, currentWinnerCard, leadSuit, trump)) {
+        currentWinnerCard = card;
+        currentWinnerIndex = idx;
+      }
+    }
+
+    const myTeam = playerIndex % 2;
+    const winnerTeam = currentWinnerIndex % 2;
+
+    if (myTeam === winnerTeam) {
+      return lowest(validCards);
+    }
+
+    const winningCards = validCards.filter((c) =>
+      this.beats(c, currentWinnerCard, leadSuit, trump)
+    );
+
+    if (winningCards.length > 0) {
+      return lowest(winningCards);
+    }
+
+    return lowest(validCards);
+  }
+};
+
+// ---------------- Player ----------------
+
+function makePlayer(name, playerId) {
+  return {
+    name,
+    playerId,
+    hand: [],
+    tricks: 0,
+    isHuman: false
+  };
+}
+
+function sortHand(player) {
+  player.hand.sort((a, b) => {
+    const suitDiff = SUIT_ORDER[a.suit] - SUIT_ORDER[b.suit];
+    if (suitDiff !== 0) return suitDiff;
+    return RANK_VALUES[b.rank] - RANK_VALUES[a.rank];
+  });
+}
+
+// Simple heuristic for a bot picking a NEW trump suit (needed
+// whenever dealer+1 or a mid-round challenger happens to be a bot --
+// the Python GUI never solved this; the web version does, so a bot
+// dealer's seat never stalls the game).
+function botPickTrumpSuit(player) {
+  const counts = { Spades: 0, Hearts: 0, Diamonds: 0, Clubs: 0 };
+  for (const card of player.hand) counts[card.suit]++;
+
+  let best = SUITS[0];
+  for (const suit of SUITS) {
+    if (counts[suit] > counts[best]) best = suit;
+  }
+  return best;
+}
+
+// ---------------- Game engine ----------------
+
+class Game {
+  constructor() {
+    this.players = [
+      makePlayer("Player 1", 0),
+      makePlayer("Player 2", 1),
+      makePlayer("Player 3", 2),
+      makePlayer("Player 4", 3)
+    ];
+    this.players[0].isHuman = true;
+
+    this.deck = new Deck();
+
+    this.trump = null;
+    this.trumpPlayerIndex = null;
+    this.trumpTeam = null;
+
+    this.dealer = 3;
+    this.roundNumber = 1;
+    this.team1Score = 0;
+    this.team2Score = 0;
+
+    this.currentPlayer = 0;
+
+    this.challengeMode = false;
+    this.challengePlayerIndex = null;
+    this.challengeTeam = null;
+
+    this.unclaimedTricks = 0;
+    this.lastWinnerIndex = null;
+    this.consecutiveWins = 0;
+    this.lastCapturedCount = 0;
+  }
+
+  teamOf(playerIndex) {
+    return playerIndex % 2 === 0 ? 1 : 2;
+  }
+
+  teamTricks() {
+    const team1 = this.players[0].tricks + this.players[2].tricks;
+    const team2 = this.players[1].tricks + this.players[3].tricks;
+    return { team1, team2 };
+  }
+
+  resetRound() {
+    this.deck = new Deck();
+    this.deck.shuffle();
+
+    this.trump = null;
+    this.trumpPlayerIndex = null;
+    this.trumpTeam = null;
+
+    this.challengeMode = false;
+    this.challengePlayerIndex = null;
+    this.challengeTeam = null;
+
+    this.unclaimedTricks = 0;
+    this.lastWinnerIndex = null;
+    this.consecutiveWins = 0;
+
+    this.currentPlayer = 0;
+
+    for (const player of this.players) {
+      player.hand = [];
+      player.tricks = 0;
+    }
+  }
+
+  // Deals one card at a time starting at the current dealer, cycling
+  // until a Jack turns up; that player becomes the dealer.
+  jackToss() {
+    this.deck = new Deck();
+    this.deck.shuffle();
+
+    const draws = [];
+
+    while (true) {
+      for (let i = 0; i < 4; i++) {
+        const playerIndex = (this.dealer + i) % 4;
+        const card = this.deck.dealCard();
+        draws.push({ playerIndex, card });
+
+        if (card.rank === "Jack") {
+          this.dealer = playerIndex;
+          return draws;
+        }
+      }
+    }
+  }
+
+  dealFirstFive() {
+    for (let round = 0; round < 5; round++) {
+      for (let i = 0; i < 4; i++) {
+        const player = this.players[(this.dealer + i) % 4];
+        const card = this.deck.dealCard();
+      if (card) {
+        player.hand.push(card);
+      }
+    }
+  }
+}
+
+  dealRemainingCards() {
+    for (let round = 0; round < 8; round++) {
+      for (let i = 0; i < 4; i++) {
+        const player = this.players[(this.dealer + i) % 4];
+        const card = this.deck.dealCard();
+        if (card) {
+          player.hand.push(card);
+        }
+      }
+    }
+  }
+
+
+  // First trump choice is always dealer+1.
+  initialTrumpChooserIndex() {
+    return (this.dealer + 1) % 4;
+  }
+
+  chooseTrump(suit, chooserIndex) {
+    this.trump = suit;
+    this.trumpPlayerIndex = chooserIndex;
+    this.trumpTeam = this.teamOf(chooserIndex);
+    for (const player of this.players) sortHand(player);
+  }
+
+  // Rotation covers all 4 players: dealer+2, dealer+3, dealer,
+  // dealer+1 (the original chooser gets the final say).
+  challengeOrderIndexForStep(step) {
+    return (this.dealer + 2 + step) % 4;
+  }
+
+  applyChallenge(newChooserIndex) {
+    this.challengeMode = true;
+    this.challengePlayerIndex = newChooserIndex;
+    this.challengeTeam = this.teamOf(newChooserIndex);
+    this.trumpPlayerIndex = newChooserIndex;
+    this.trumpTeam = this.teamOf(newChooserIndex);
+  }
+
+  // Tricks pool up until a player wins 2 in a row, then claims the
+  // whole pool. Trick 13 is a hard flush regardless of streak.
+  // Returns { capturedIndex, capturedCount } or null.
+  updateScore(winnerIndex, trickNumber) {
+    this.unclaimedTricks += 1;
+
+    if (this.lastWinnerIndex === winnerIndex) {
+      this.consecutiveWins += 1;
+    } else {
+      this.lastWinnerIndex = winnerIndex;
+      this.consecutiveWins = 1;
+    }
+
+    let result = null;
+
+    if (this.consecutiveWins === 2) {
+      this.players[winnerIndex].tricks += this.unclaimedTricks;
+      result = { capturedIndex: winnerIndex, capturedCount: this.unclaimedTricks };
+      this.lastCapturedCount = this.unclaimedTricks;
+
+      this.unclaimedTricks = 0;
+      this.consecutiveWins = 0;
+      this.lastWinnerIndex = null;
+    } else if (trickNumber === 13) {
+      this.players[winnerIndex].tricks += this.unclaimedTricks;
+      result = { capturedIndex: winnerIndex, capturedCount: this.unclaimedTricks };
+      this.lastCapturedCount = this.unclaimedTricks;
+
+      this.unclaimedTricks = 0;
+    }
+
+    return result;
+  }
+
+  // Unified dealer-rotation rule:
+  // - Trump team succeeded -> same dealer continues.
+  // - Trump team failed:
+  //     - failing team IS the dealer's own team (only possible via a
+  //       mid-round challenge from the dealer's partner) -> new
+  //       dealer = dealer + 2 (the partner, since the dealer already
+  //       dealt this round).
+  //     - otherwise -> new dealer = dealer + 1.
+  rotateDealer(trumpTeamSucceeded) {
+    if (trumpTeamSucceeded) return;
+
+    const dealerTeam = this.teamOf(this.dealer);
+
+    if (this.trumpTeam === dealerTeam) {
+      this.dealer = (this.dealer + 2) % 4;
+    } else {
+      this.dealer = (this.dealer + 1) % 4;
+    }
+  }
+
+  matchOver() {
+    return this.team1Score >= 5 || this.team2Score >= 5;
+  }
+}
+
+if (typeof module !== "undefined") {
+  module.exports = {
+    SUITS, RANKS, RANK_VALUES, SUIT_ORDER,
+    cardValue, Deck, Rules, Bot,
+    makePlayer, sortHand, botPickTrumpSuit,
+    Game
+  };
+}
+
+// ============================================================
+// UI CONTROLLER (bots mode)
+// ============================================================
+// ============================================================
+// Court Piece -- UI controller
+// Wires the tested engine (Game / Rules / Bot) to DOM rendering.
+// Event-driven: setTimeout stands in for pygame's frame loop,
+// CSS transitions handle all card movement.
+// ============================================================
+
+const SUIT_SYMBOL = { Spades: "♠", Hearts: "♥", Diamonds: "♦", Clubs: "♣" };
+const RED_SUITS = new Set(["Hearts", "Diamonds"]);
+
+// Confirmed mapping from the user's actual asset filenames:
+// C2.png = Hearts 2, D2.png = Clubs 2, H2.png = Diamonds 2, S2.png = Spades 2.
+const SUIT_TO_LETTER = { Spades: "S", Hearts: "C", Diamonds: "H", Clubs: "D" };
+
+const RANK_TO_LETTER = {
+  "Ace": "A", "2": "2", "3": "3", "4": "4", "5": "5", "6": "6", "7": "7",
+  "8": "8", "9": "9", "10": "10", "Jack": "J", "Queen": "Q", "King": "K"
+};
+
+const CARD_DIR = "assets/cards/";
+const TABLE_IMAGE = "assets/table.png";
+const CARD_BACK_IMAGE = CARD_DIR + "back side card.png";
+
+function cardImageSrc(card) {
+  return encodeURI(`${CARD_DIR}${SUIT_TO_LETTER[card.suit]}${RANK_TO_LETTER[card.rank]}.png`);
+}
+
+// Design-space coordinates (1000 x 700 stage, scaled to fit viewport).
+const SEAT_POS = {
+  0: { x: 500, y: 655 },
+  1: { x: 70, y: 345 },
+  2: { x: 500, y: 55 },
+  3: { x: 930, y: 345 }
+};
+
+const PLAY_POS = {
+  0: { x: 460, y: 430 },
+  1: { x: 335, y: 330 },
+  2: { x: 460, y: 235 },
+  3: { x: 585, y: 330 }
+};
+
+// ---------------- Mobile-aware coordinates ----------------
+// Desktop keeps using the fixed 1000x700 design-space SEAT_POS /
+// PLAY_POS above (unchanged). On mobile the stage IS the viewport
+// (see CSS @media block), so these two helpers return live
+// viewport-based coordinates instead -- same seat roles, same
+// rules, just repositioned to fit a phone screen. Call these fresh
+// each time (not once at load) since the viewport can rotate/resize.
+
+function isMobile() {
+  return window.innerWidth <= 700;
+}
+
+function getSeatPos() {
+  if (!isMobile()) return SEAT_POS;
+  const w = window.innerWidth, h = window.innerHeight;
+  return {
+    0: { x: w * 0.5, y: h - 96 },
+    1: { x: w * 0.13, y: h * 0.46 },
+    2: { x: w * 0.5, y: h * 0.16 },
+    3: { x: w * 0.87, y: h * 0.46 }
+  };
+}
+
+function getPlayPos() {
+  if (!isMobile()) return PLAY_POS;
+  const w = window.innerWidth, h = window.innerHeight;
+  return {
+    0: { x: w * 0.5 - 50, y: h * 0.62 },
+    1: { x: w * 0.30, y: h * 0.40 },
+    2: { x: w * 0.5 - 50, y: h * 0.26 },
+    3: { x: w * 0.62, y: h * 0.40 }
+  };
+}
+
+const BOT_THINK_MS = 650;
+const CHALLENGE_THINK_MS = 900;
+const TRICK_FLY_MS = 550;
+const TRICK_HOLD_MS = 650;
+const CAPTURE_BANNER_MS = 1700;
+const ROUND_BANNER_MS = 2600;
+
+// ---------------- DOM refs ----------------
+
+const stage = document.getElementById("stage");
+const introOverlay = document.getElementById("intro-overlay");
+const introText = document.getElementById("intro-text");
+const introButton = document.getElementById("intro-button");
+
+const seatEls = {
+  1: document.getElementById("seat-1"),
+  2: document.getElementById("seat-2"),
+  3: document.getElementById("seat-3")
+};
+
+const handEl = document.getElementById("hand");
+const tableCardsEl = document.getElementById("table-cards");
+
+const roundPanelText = document.getElementById("round-panel-text");
+const trumpPanelText = document.getElementById("trump-panel-text");
+const tallyPanelText = document.getElementById("tally-panel-text");
+const scorePanelText = document.getElementById("score-panel-text");
+
+const trumpButtonsEl = document.getElementById("trump-buttons");
+const challengePopupEl = document.getElementById("challenge-popup");
+const challengeTitleEl = document.getElementById("challenge-title");
+const challengeYesNoEl = document.getElementById("challenge-yes-no");
+const challengeThinkingEl = document.getElementById("challenge-thinking");
+
+const captureBannerEl = document.getElementById("capture-banner");
+const roundBannerEl = document.getElementById("round-banner");
+const followSuitToastEl = document.getElementById("follow-suit-toast");
+
+// ---------------- Game state ----------------
+
+const game = new Game();
+
+let turnPlayer = 0;
+let trickNumber = 1;
+let currentTrick = []; // [{ playerIndex, card, el }]
+let acceptingHumanClick = false;
+let poolSeat = null;
+let poolCount = 0;
+
+// ---------------- Exit confirmation (replaces the old Menu button) ----------------
+// There's no visible "quit" button during play any more. Instead, the
+// device/browser back action is intercepted while a game (bots or
+// online) is in progress, and the player is asked to confirm before
+// actually leaving. Confirming reloads the page (back to the main
+// menu); cancelling keeps them in the game exactly where they were.
+
+let inGame = false;
+
+function markInGame() {
+  inGame = true;
+  history.pushState({ courtPiece: "game" }, "", location.href);
+}
+
+function markAtMenu() {
+  inGame = false;
+}
+
+window.addEventListener("popstate", () => {
+  if (!inGame) return;
+
+  const shouldExit = window.confirm("Exit the game and return to the menu?");
+  if (shouldExit) {
+    window.location.reload();
+  } else {
+    // Cancel the back navigation by re-arming a history entry so the
+    // next back press is caught by this same handler again.
+    history.pushState({ courtPiece: "game" }, "", location.href);
+  }
+});
+
+// Prime one history entry up front so the very first back press,
+// even before a game has started, doesn't leave an empty history
+// stack (harmless on menu/lobby screens since inGame is false there).
+history.pushState({ courtPiece: "boot" }, "", location.href);
+
+// ---------------- Stage scaling ----------------
+
+function fitStage() {
+  if (isMobile()) return; // CSS @media block makes #stage full-bleed on mobile
+  const scale = Math.min(window.innerWidth / 1000, window.innerHeight / 700);
+  stage.style.transform = `translate(-50%, -50%) scale(${scale})`;
+}
+window.addEventListener("resize", fitStage);
+fitStage();
+
+// ---------------- Card element helpers ----------------
+
+function suitColor(suit) {
+  return RED_SUITS.has(suit) ? "var(--red-suit)" : "var(--black-suit)";
+}
+
+function createCardFace(card) {
+  const el = document.createElement("img");
+  el.className = "card";
+  el.src = cardImageSrc(card);
+  el.alt = `${card.rank} of ${card.suit}`;
+  el.draggable = false;
+  return el;
+}
+
+function positionAbs(el, x, y) {
+  el.style.left = x + "px";
+  el.style.top = y + "px";
+}
+
+// ---------------- Rendering ----------------
+
+function renderHand() {
+  handEl.innerHTML = "";
+
+  const hand = game.players[0].hand;
+
+  const mobile = isMobile();
+  const stageWidth = mobile ? window.innerWidth : 1000;
+  const cardW = mobile ? 82 : 84;
+
+  let gap, startX;
+  if (mobile) {
+    // Left-biased fan: first card sits near the left edge (fully
+    // visible) and the fan overlaps toward the right instead of
+    // being centered and clipping cards off both edges.
+    const leftMargin = 10;
+    const rightMargin = 6;
+    const maxGap = 26;
+    const available = stageWidth - cardW - leftMargin - rightMargin;
+    gap = Math.min(maxGap, available / Math.max(hand.length - 1, 1));
+    startX = leftMargin;
+  } else {
+    // Better spacing for 13 cards
+    gap = Math.min(58, (stageWidth - 140) / Math.max(hand.length - 1, 1));
+    const totalWidth = (hand.length - 1) * gap + cardW;
+    startX = (stageWidth - totalWidth) / 2;
+  }
+
+  const baseY = mobile ? window.innerHeight - 138 : 575;
+
+  hand.forEach((card, i) => {
+
+    const el = createCardFace(card);
+
+    el.classList.add("hand-card");
+
+    const center = (hand.length - 1) / 2;
+
+    const curve = Math.abs(i - center);
+
+    const y = baseY + curve * 2;
+
+    positionAbs(el, startX + i * gap, y);
+
+    el.style.zIndex = i;
+
+    el.addEventListener("click", () => onHumanCardClick(card, el));
+
+    handEl.appendChild(el);
+
+  });
+}
+function renderSeats() {
+  for (const idx of [1, 2, 3]) {
+    const seatEl = seatEls[idx];
+    const hand = game.players[idx].hand;
+    const stackEl = seatEl.querySelector(".hidden-stack");
+    stackEl.innerHTML = "";
+
+    const count = Math.min(hand.length, 6);
+    for (let i = 0; i < count; i++) {
+      const back = document.createElement("img");
+      back.className = "card card-back";
+      back.src = encodeURI(CARD_BACK_IMAGE);
+      back.alt = "Hidden card";
+      back.draggable = false;
+      back.style.left = `${i * 3}px`;
+      back.style.top = `${i}px`;
+      back.style.zIndex = i;
+
+      stackEl.appendChild(back);
+    }
+
+    const role =
+      idx === 2 ? "<span class=\"role-icon\">🤝</span> Teammate" : "Opponent";
+
+  let displayName;
+
+  if (idx === 1) {
+      displayName = game.players[1].name; // Top shows Player 3
+  } else if (idx === 2) {
+      displayName = game.players[2].name; // Left shows Player 2
+  } else {
+      displayName = game.players[3].name; // Right shows Player 4
+  }
+
+  let dealerText = "";
+
+  if (game.dealer === idx) {
+      dealerText = `<br><span class="dealer-label">Dealer</span>`;
+  }
+
+  seatEl.querySelector(".seat-name").innerHTML =
+      `${role}<br><span class="player-real-name">${displayName}</span>${dealerText}`;
+
+  seatEl.classList.toggle("active-turn", turnPlayer === idx);
+  }
+}
+
+function renderHUD() {
+  roundPanelText.textContent = `Round ${game.roundNumber}`;
+
+  const symbol = game.trump ? SUIT_SYMBOL[game.trump] : "";
+  trumpPanelText.innerHTML = game.trump
+    ? `Trump: <span style="color:${suitColor(game.trump)}">${symbol} ${game.trump}</span>`
+    : "Trump: -";
+
+  const { team1, team2 } = game.teamTricks();
+  tallyPanelText.textContent = `${team1} - ${team2}`;
+
+  scorePanelText.textContent = `${game.team1Score} - ${game.team2Score}`;
+}
+
+function renderPoolMarker() {
+  for (const idx of [1, 2, 3]) {
+    const marker = seatEls[idx].querySelector(".pool-marker");
+    marker.innerHTML = "";
+    marker.style.display = "none";
+  }
+  let humanMarker = document.getElementById("hand-pool-marker");
+
+  if (poolSeat === null || poolCount === 0) {
+    if (humanMarker) humanMarker.style.display = "none";
+    return;
+  }
+
+  const count = Math.min(poolCount, 8);
+
+  if (poolSeat === 0) {
+    if (humanMarker) {
+      humanMarker.style.display = "block";
+      humanMarker.innerHTML = `<span class="pool-badge">${poolCount}</span>`;
+    }
+    return;
+  }
+
+  const marker = seatEls[poolSeat].querySelector(".pool-marker");
+  marker.style.display = "block";
+  for (let i = 0; i < count; i++) {
+    const chip = document.createElement("div");
+    chip.className = "pool-chip";
+    chip.style.left = i * 3 + "px";
+    chip.style.top = -i * 3 + "px";
+    marker.appendChild(chip);
+  }
+  const badge = document.createElement("span");
+  badge.className = "pool-badge";
+  badge.textContent = poolCount;
+  marker.appendChild(badge);
+}
+
+function showCaptureBanner(name, count) {
+  captureBannerEl.textContent = `🔥 ${name} captured ${count} trick${count !== 1 ? "s" : ""}!`;
+  captureBannerEl.classList.add("visible");
+  setTimeout(() => captureBannerEl.classList.remove("visible"), CAPTURE_BANNER_MS);
+}
+
+function showRoundBanner(text, persistent = false) {
+  roundBannerEl.textContent = text;
+  roundBannerEl.classList.add("visible");
+  if (!persistent) {
+    setTimeout(() => roundBannerEl.classList.remove("visible"), ROUND_BANNER_MS);
+  }
+}
+
+function showFollowSuitToast() {
+  followSuitToastEl.classList.add("visible");
+  setTimeout(() => followSuitToastEl.classList.remove("visible"), 1200);
+}
+
+// ---------------- Intro / jack toss ----------------
+
+function startIntro() {
+  markInGame();
+  introOverlay.classList.add("visible");
+  introButton.style.display = "inline-block";
+  introText.textContent = "Draw for dealer";
+  introButton.textContent = "Draw";
+  introButton.onclick = runJackToss;
+}
+
+function runJackToss() {
+  introButton.style.display = "none";
+  const draws = game.jackToss();
+
+  let i = 0;
+  function revealNext() {
+    if (i >= draws.length) {
+      introText.textContent = `${game.players[game.dealer].name} is the dealer!`;
+      setTimeout(() => {
+        introOverlay.classList.remove("visible");
+        startRound();
+      }, 1100);
+      return;
+    }
+    const { playerIndex, card } = draws[i];
+    introText.textContent = `${game.players[playerIndex].name} draws ${card.rank} of ${card.suit}`;
+    i++;
+    setTimeout(revealNext, 380);
+  }
+  revealNext();
+}
+
+// ---------------- Round flow ----------------
+
+function startRound() {
+  if (game.roundNumber > 1) game.resetRound();
+
+  // FIX: jackToss() already consumed 1+ cards from the deck it used --
+  // reusing that same (depleted) deck here, only reshuffling it,
+  // means the deck always comes up short by round's end and deals
+  // out `null` cards, eventually crashing whichever bot holds one.
+  // A fresh 52-card deck every round matches what the Python
+  // original always did (`self.deck = Deck()` inside play_round()).
+  game.deck = new Deck();
+  game.deck.shuffle();
+  game.dealFirstFive();
+
+  trickNumber = 1;
+  currentTrick = [];
+  poolSeat = null;
+  poolCount = 0;
+
+  renderHand();
+  renderSeats();
+  renderHUD();
+  renderPoolMarker();
+
+  const chooserIndex = game.initialTrumpChooserIndex();
+
+  if (game.players[chooserIndex].isHuman) {
+    showTrumpButtons(false, chooserIndex);
+  } else {
+    showRoundBanner(`${game.players[chooserIndex].name} is choosing trump...`);
+    setTimeout(() => {
+      const suit = botPickTrumpSuit(game.players[chooserIndex]);
+      onTrumpChosen(suit, chooserIndex, false);
+    }, 1100);
+  }
+}
+
+function showTrumpButtons(isChallenge, chooserIndex) {
+  trumpButtonsEl.classList.add("visible");
+  trumpButtonsEl.querySelectorAll("button").forEach((btn) => {
+    btn.onclick = () => {
+      trumpButtonsEl.classList.remove("visible");
+      onTrumpChosen(btn.dataset.suit, chooserIndex, isChallenge);
+    };
+  });
+}
+
+function onTrumpChosen(suit, chooserIndex, isChallenge) {
+  if (!isChallenge) {
+    game.chooseTrump(suit, chooserIndex);
+    game.dealRemainingCards();
+    
+    for (const player of game.players) {
+        sortHand(player);
+    }
+
+    renderHand();
+    renderSeats();
+    renderHUD();
+    runChallengeStep(0);
+  } else {
+    game.applyChallenge(chooserIndex);
+    game.trump = suit;
+    renderHUD();
+    beginTrickPlay();
+  }
+}
+
+function runChallengeStep(step) {
+  if (step >= 4) {
+    challengePopupEl.classList.remove("visible");
+    beginTrickPlay();
+    return;
+  }
+
+  const idx = game.challengeOrderIndexForStep(step);
+  challengePopupEl.classList.add("visible");
+  challengeTitleEl.textContent = `${game.players[idx].name}'s turn`;
+
+  if (game.players[idx].isHuman) {
+    challengeYesNoEl.style.display = "flex";
+    challengeThinkingEl.style.display = "none";
+
+    document.getElementById("challenge-yes").onclick = () => {
+      challengePopupEl.classList.remove("visible");
+      if (game.players[idx].isHuman) {
+        showTrumpButtons(true, idx);
+      }
+    };
+    document.getElementById("challenge-no").onclick = () => {
+      runChallengeStep(step + 1);
+    };
+  } else {
+    challengeYesNoEl.style.display = "none";
+    challengeThinkingEl.style.display = "block";
+    challengeThinkingEl.textContent = `${game.players[idx].name} is thinking...`;
+
+    setTimeout(() => {
+      // Bots challenge rarely, just to keep games from being too static.
+      const saysYes = Math.random() < 0.08;
+      if (saysYes) {
+        challengePopupEl.classList.remove("visible");
+        const suit = botPickTrumpSuit(game.players[idx]);
+        onTrumpChosen(suit, idx, true);
+      } else {
+        runChallengeStep(step + 1);
+      }
+    }, CHALLENGE_THINK_MS);
+  }
+}
+
+function beginTrickPlay() {
+  turnPlayer = game.trumpPlayerIndex;
+  game.currentPlayer = turnPlayer;
+  renderHUD();
+  advanceTurn();
+}
+
+function advanceTurn() {
+  renderSeats();
+
+  if (game.players[turnPlayer].isHuman) {
+    acceptingHumanClick = true;
+  } else {
+    acceptingHumanClick = false;
+    setTimeout(botPlay, BOT_THINK_MS);
+  }
+}
+
+function leadSuitOfTrick() {
+  return currentTrick.length === 0 ? null : currentTrick[0].card.suit;
+}
+
+function humanHasSuit(suit) {
+  return game.players[0].hand.some((c) => c.suit === suit);
+}
+
+function isValidHumanCard(card) {
+  const leadSuit = leadSuitOfTrick();
+  if (leadSuit === null) return true;
+  if (humanHasSuit(leadSuit)) return card.suit === leadSuit;
+  return true;
+}
+
+function onHumanCardClick(card, el) {
+  if (!acceptingHumanClick || turnPlayer !== 0) return;
+
+  if (!isValidHumanCard(card)) {
+    showFollowSuitToast();
+    return;
+  }
+
+  acceptingHumanClick = false;
+
+  const hand = game.players[0].hand;
+  const idx = hand.findIndex((c) => c.rank === card.rank && c.suit === card.suit);
+  hand.splice(idx, 1);
+  renderHand();
+
+  playCardToTable(0, card, el, true);
+}
+
+function botPlay() {
+  const idx = turnPlayer;
+  const player = game.players[idx];
+  const leadSuit = leadSuitOfTrick();
+  const playedPairs = currentTrick.map((e) => [e.playerIndex, e.card]);
+
+  const card = Bot.chooseCard(idx, player.hand, leadSuit, playedPairs, game.trump);
+  console.log("Bot:", idx);
+  console.log("Bot hand:", player.hand);
+  console.log("Chosen card:", card);
+
+  if (!card) {
+      console.error("Bot.chooseCard returned undefined");
+      return;
+  }
+  const cardIdx = player.hand.findIndex((c) => c.rank === card.rank && c.suit === card.suit);
+  player.hand.splice(cardIdx, 1);
+  renderSeats();
+
+  const el = createCardFace(card);
+  el.classList.add("table-card");
+  const pos = getPlayPos()[idx];
+  positionAbs(el, pos.x, pos.y);
+  tableCardsEl.appendChild(el);
+
+  playCardToTable(idx, card, el, false);
+}
+
+function playCardToTable(playerIndex, card, el, isHumanOrigin) {
+  if (isHumanOrigin) {
+    el.classList.add("table-card");
+    tableCardsEl.appendChild(el);
+    const pos = getPlayPos()[0];
+    // Force reflow so the transition applies from the hand position.
+    el.getBoundingClientRect();
+    positionAbs(el, pos.x, pos.y);
+  }
+
+  currentTrick.push({ playerIndex, card, el });
+
+  turnPlayer = (playerIndex + 1) % 4;
+
+  if (currentTrick.length === 4) {
+    setTimeout(finishTrick, 250);
+  } else {
+    advanceTurn();
+  }
+}
+
+function finishTrick() {
+  console.log("finishTrick called");
+  const playedPairs = currentTrick.map((e) => [e.playerIndex, e.card]);
+  console.log("Played Cards:", playedPairs);
+  const winnerIndex = Rules.determineWinner(playedPairs, game.trump);
+  console.log("Winner Index:", winnerIndex);
+
+
+
+  const target = getSeatPos()[winnerIndex];
+  for (const entry of currentTrick) {
+    entry.el.style.transition = `left ${TRICK_FLY_MS}ms ease-in, top ${TRICK_FLY_MS}ms ease-in`;
+    positionAbs(entry.el, target.x, target.y);
+  }
+
+  setTimeout(() => {
+    const capture = game.updateScore(winnerIndex, trickNumber);
+
+    if (capture) {
+      poolSeat = null;
+      poolCount = 0;
+      showCaptureBanner(game.players[capture.capturedIndex].name, capture.capturedCount);
+    } else {
+      poolSeat = winnerIndex;
+      poolCount = game.unclaimedTricks;
+    }
+    renderPoolMarker();
+    renderHUD();
+
+    let challengeFailed = false;
+    if (game.challengeMode && capture) {
+      const capturingTeam = game.teamOf(capture.capturedIndex);
+      if (capturingTeam !== game.challengeTeam) {
+        challengeFailed = true;
+        const losingTeam = game.challengeTeam;
+        if (capturingTeam === 1) game.team1Score += 1; else game.team2Score += 1;
+        game.rotateDealer(false);
+        showRoundBanner(`Team ${losingTeam} failed the challenge! Team ${capturingTeam} scores.`);
+        renderHUD();
+      }
+    }
+
+    setTimeout(() => {
+      tableCardsEl.innerHTML = "";
+      currentTrick = [];
+
+      if (challengeFailed) {
+        afterRoundEnds();
+        return;
+      }
+
+      if (trickNumber === 13) {
+        resolveRoundEnd();
+        afterRoundEnds();
+        return;
+      }
+
+      trickNumber += 1;
+      turnPlayer = winnerIndex;
+      game.currentPlayer = winnerIndex;
+      advanceTurn();
+    }, TRICK_HOLD_MS);
+  }, TRICK_FLY_MS);
+}
+
+function resolveRoundEnd() {
+  const { team1, team2 } = game.teamTricks();
+
+  if (game.challengeMode) {
+    const winningTeam = game.challengeTeam;
+    if (winningTeam === 1) game.team1Score += 1; else game.team2Score += 1;
+    showRoundBanner(`Team ${winningTeam} swept the round! Challenge successful.`);
+    game.rotateDealer(true);
+  } else {
+    let courtMsg = "";
+    if (team1 === 13) { game.team1Score += 1; courtMsg = "Team 1 made a court! "; }
+    else if (team2 === 13) { game.team2Score += 1; courtMsg = "Team 2 made a court! "; }
+
+    const trumpSucceeded = game.trumpTeam === 1 ? team1 >= 8 : team2 >= 8;
+
+    let msg;
+    if (game.trumpTeam === 1) {
+      msg = trumpSucceeded ? "Team 1 won the round!" : "Team 1 failed -- Team 2 wins the round!";
+      if (!trumpSucceeded) game.team2Score += 1;
+    } else {
+      msg = trumpSucceeded ? "Team 2 won the round!" : "Team 2 failed -- Team 1 wins the round!";
+      if (!trumpSucceeded) game.team1Score += 1;
+    }
+
+    showRoundBanner(courtMsg + msg);
+    game.rotateDealer(trumpSucceeded);
+  }
+
+  renderHUD();
+}
+
+function afterRoundEnds() {
+  if (game.matchOver()) {
+    setTimeout(() => {
+      const winner = game.team1Score >= 5 ? 1 : 2;
+      showRoundBanner(`🏆 TEAM ${winner} WINS THE MATCH! 🏆`, true);
+    }, ROUND_BANNER_MS - 300);
+    return;
+  }
+
+  setTimeout(() => {
+    game.roundNumber += 1;
+    startRound();
+  }, ROUND_BANNER_MS);
+}
+
+// ---------------- Boot ----------------
+// The menu screen (menu.js) calls startIntro() when the person
+// picks "Play vs Bots" -- no auto-boot here anymore.
+
+// ============================================================
+// MENU + ONLINE MULTIPLAYER CLIENT
+// ============================================================
+// ============================================================
+// Court Piece -- menu + online multiplayer client
+// Reuses helpers already defined in controller.js (createCardFace,
+// positionAbs, SEAT_POS, PLAY_POS, SUIT_SYMBOL, suitColor,
+// showCaptureBanner, showRoundBanner, showFollowSuitToast) and the
+// same #stage DOM elements -- but drives them from server "state"
+// messages instead of a local Game instance.
+// ============================================================
+
+// ---------------- Menu DOM ----------------
+
+const menuOverlay = document.getElementById("menu-overlay");
+const menuPlayBotsBtn = document.getElementById("menu-play-bots");
+const menuPlayOnlineBtn = document.getElementById("menu-play-online");
+const menuHowToPlayBtn = document.getElementById("menu-how-to-play");
+const howToPlayOverlay = document.getElementById("how-to-play-overlay");
+const howToPlayCloseBtn = document.getElementById("how-to-play-close");
+
+const lobbyOverlay = document.getElementById("lobby-overlay");
+const lobbyNameInput = document.getElementById("lobby-name");
+const lobbyServerInput = document.getElementById("lobby-server");
+const lobbyServerRow = document.getElementById("lobby-server-row");
+const lobbyCreateBtn = document.getElementById("lobby-create");
+const lobbyCodeInput = document.getElementById("lobby-code");
+const lobbyJoinBtn = document.getElementById("lobby-join");
+const lobbyStatus = document.getElementById("lobby-status");
+const lobbyRoomInfo = document.getElementById("lobby-room-info");
+const lobbyRoomCode = document.getElementById("lobby-room-code");
+const lobbyPlayerList = document.getElementById("lobby-player-list");
+const lobbyStartBotsBtn = document.getElementById("lobby-start-bots");
+const lobbyBackBtn = document.getElementById("lobby-back");
+const friendMyId = document.getElementById("friend-my-id");
+const friendIdInput = document.getElementById("friend-id-input");
+const friendAddBtn = document.getElementById("friend-add");
+const friendRequestsEl = document.getElementById("friend-requests");
+const friendListEl = document.getElementById("friend-list");
+
+// ---------------- Online state ----------------
+
+let socket = null;
+let mySeat = null;
+let myRoomCode = null;
+let isCreator = false;
+let latestState = null;
+let playerId = localStorage.getItem("courtPiecePlayerId") || null;
+let friends = [];
+
+function renderFriends() {
+  friendMyId.textContent = playerId || "Connect to get your ID";
+  friendRequestsEl.innerHTML = "";
+  friendListEl.innerHTML = "";
+  friends.filter(f => f.status === "incoming").forEach(f => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span>${escapeHtml(f.name)} wants to be friends</span>`;
+    const accept = document.createElement("button"); accept.textContent = "Accept";
+    accept.onclick = () => send({ type: "accept_friend", playerId: f.id });
+    li.appendChild(accept); friendRequestsEl.appendChild(li);
+  });
+  friends.filter(f => f.status === "accepted").forEach(f => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span>${escapeHtml(f.name)} <small>${f.online ? "online" : "offline"}</small></span>`;
+    if (myRoomCode && isCreator && f.online) {
+      const invite = document.createElement("button"); invite.textContent = "Invite";
+      invite.onclick = () => send({ type: "invite_friend", playerId: f.id, code: myRoomCode }); li.appendChild(invite);
+    }
+    friendListEl.appendChild(li);
+  });
+  if (!friends.length) friendListEl.innerHTML = "<li><span>No friends yet — share your ID to add one.</span></li>";
+}
+function escapeHtml(value) { const e = document.createElement("div"); e.textContent = value || "Player"; return e.innerHTML; }
+
+// ---------------- Seat rotation ----------------
+// Whichever absolute seat I am, my own hand always renders at the
+// bottom (slot 0), and the others rotate around me consistently.
+
+function slotFor(absoluteIndex) {
+  return (absoluteIndex - mySeat + 4) % 4;
+}
+
+// ---------------- Menu wiring ----------------
+
+menuPlayBotsBtn.addEventListener("click", () => {
+  menuOverlay.classList.remove("visible");
+  startIntro(); // defined in controller.js
+});
+
+menuHowToPlayBtn.addEventListener("click", () => {
+  howToPlayOverlay.classList.add("visible");
+});
+
+howToPlayCloseBtn.addEventListener("click", () => {
+  howToPlayOverlay.classList.remove("visible");
+});
+
+menuPlayOnlineBtn.addEventListener("click", () => {
+  menuOverlay.classList.remove("visible");
+  lobbyOverlay.classList.add("visible");
+
+  if (window.location.protocol === "file:") {
+    lobbyServerRow.style.display = "flex";
+  } else {
+    lobbyServerRow.style.display = "none";
+  }
+});
+
+lobbyBackBtn.addEventListener("click", () => {
+  if (socket) {
+    try { socket.close(); } catch (e) {}
+    socket = null;
+  }
+  markAtMenu();
+  lobbyOverlay.classList.remove("visible");
+  lobbyRoomInfo.classList.remove("visible");
+  lobbyStatus.textContent = "";
+  menuOverlay.classList.add("visible");
+});
+
+function serverUrl() {
+  if (window.location.protocol === "file:") {
+    const addr = (lobbyServerInput.value || "localhost:8080").trim();
+    return `ws://${addr}`;
+  }
+  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${proto}//${window.location.host}`;
+}
+
+function connectSocket(onOpen) {
+  if (socket) {
+    try { socket.close(); } catch (e) {}
+  }
+  socket = new WebSocket(serverUrl());
+
+  socket.addEventListener("open", () => {
+    roundBannerEl.classList.remove("visible"); // hide old "Connection lost" banner
+    send({ type: "identify", playerId, name: lobbyNameInput.value || "Player" });
+    if (onOpen) onOpen();
+  });
+  socket.addEventListener("message", (event) => {
+    handleServerMessage(JSON.parse(event.data));
+  });
+  socket.addEventListener("error", () => {
+    lobbyStatus.textContent = "Couldn't reach the server. Check the address and that it's running.";
+  });
+  socket.addEventListener("close", () => {
+    if (latestState && latestState.phase !== "match_over") {
+      showRoundBanner("Connection lost.", true);
+    }
+  });
+}
+
+function send(obj) {
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify(obj));
+  }
+}
+
+lobbyCreateBtn.addEventListener("click", () => {
+  lobbyStatus.textContent = "Connecting...";
+  connectSocket(() => {
+    send({ type: "create_room", name: lobbyNameInput.value || "Player 1" });
+  });
+});
+
+lobbyJoinBtn.addEventListener("click", () => {
+  const code = (lobbyCodeInput.value || "").trim().toUpperCase();
+  if (!code) {
+    lobbyStatus.textContent = "Enter a room code first.";
+    return;
+  }
+  lobbyStatus.textContent = "Connecting...";
+  connectSocket(() => {
+    send({ type: "join_room", code, name: lobbyNameInput.value || "Player" });
+  });
+});
+
+lobbyStartBotsBtn.addEventListener("click", () => {
+  send({ type: "start_now" });
+});
+
+friendAddBtn.addEventListener("click", () => {
+  const id = friendIdInput.value.trim().toUpperCase();
+  if (!id) { lobbyStatus.textContent = "Enter your friend's Player ID."; return; }
+  send({ type: "add_friend", playerId: id });
+  friendIdInput.value = "";
+});
+
+// ---------------- Server message handling ----------------
+
+function handleServerMessage(msg) {
+  if (msg.type === "identity") {
+    playerId = msg.playerId; localStorage.setItem("courtPiecePlayerId", playerId); renderFriends(); return;
+  }
+  if (msg.type === "friends") { friends = msg.friends || []; renderFriends(); return; }
+  if (msg.type === "friend_invite") {
+    lobbyCodeInput.value = msg.code; lobbyStatus.textContent = `${msg.name} invited you to room ${msg.code}. Press Join.`; return;
+  }
+  if (msg.type === "joined") {
+    mySeat = msg.seat;
+    myRoomCode = msg.code;
+    isCreator = mySeat === 0;
+
+    lobbyStatus.textContent = "";
+    lobbyRoomInfo.classList.add("visible");
+    lobbyRoomCode.textContent = msg.code;
+    lobbyStartBotsBtn.style.display = isCreator ? "inline-block" : "none";
+    renderFriends();
+    return;
+  }
+
+  if (msg.type === "error") {
+    lobbyStatus.textContent = msg.message;
+    return;
+  }
+
+  if (msg.type === "event") {
+    if (lobbyOverlay.classList.contains("visible")) return;
+    showRoundBanner(msg.text);
+    return;
+  }
+
+  if (msg.type === "await_trump_pick") {
+    trumpButtonsEl.classList.add("visible");
+    wireTrumpButtonsOnline(true);
+    return;
+  }
+
+  if (msg.type === "state") {
+    latestState = msg;
+
+    if (msg.phase === "lobby" || !isGameVisible()) {
+      updateLobbyPlayerList(msg);
+    }
+
+    if (msg.phase !== "lobby") {
+      enterGameView();
+      renderOnlineState(msg);
+    }
+  }
+}
+
+function isGameVisible() {
+  return !menuOverlay.classList.contains("visible") && !lobbyOverlay.classList.contains("visible");
+}
+
+function updateLobbyPlayerList(msg) {
+  lobbyPlayerList.innerHTML = "";
+  msg.players.forEach((p, i) => {
+    const li = document.createElement("li");
+    li.textContent = `${p.name}${p.isBot ? " (empty seat)" : ""}${i === mySeat ? " -- you" : ""}`;
+    lobbyPlayerList.appendChild(li);
+  });
+}
+
+function enterGameView() {
+  markInGame();
+  lobbyOverlay.classList.remove("visible");
+  introOverlay.classList.remove("visible");
+  menuOverlay.classList.remove("visible");
+}
+
+// ---------------- Rendering (online) ----------------
+
+function renderOnlineHand(state) {
+  handEl.innerHTML = "";
+  const hand = state.hand;
+
+  const mobile = isMobile();
+  const stageWidth = mobile ? window.innerWidth : 1000;
+  const cardW = mobile ? 82 : 62;
+
+  let gap, startX;
+  if (mobile) {
+    const leftMargin = 10;
+    const rightMargin = 6;
+    const maxGap = 26;
+    const available = stageWidth - cardW - leftMargin - rightMargin;
+    gap = Math.min(maxGap, available / Math.max(hand.length - 1, 1));
+    startX = leftMargin;
+  } else {
+    gap = Math.min(46, (stageWidth - 60) / Math.max(hand.length, 1));
+    const totalWidth = (hand.length - 1) * gap + cardW;
+    startX = stageWidth / 2 - totalWidth / 2;
+  }
+
+  const baseY = mobile ? window.innerHeight - 138 : 600;
+
+  const canPlay = state.phase === "trick" && state.turnPlayer === mySeat;
+
+  hand.forEach((card, i) => {
+    const el = createCardFace(card);
+    el.classList.add("hand-card");
+    positionAbs(el, startX + i * gap, baseY);
+    el.style.zIndex = i;
+    if (canPlay) {
+      el.addEventListener("click", () => onOnlineCardClick(card));
+    } else {
+      el.style.cursor = "default";
+    }
+    handEl.appendChild(el);
+  });
+}
+
+function renderOnlineSeats(state) {
+  for (let abs = 0; abs < 4; abs++) {
+    if (abs === mySeat) continue;
+    const slot = slotFor(abs);
+    const seatEl = seatEls[slot];
+    if (!seatEl) continue;
+
+    const p = state.players[abs];
+    const stackEl = seatEl.querySelector(".hidden-stack");
+    stackEl.innerHTML = "";
+
+    const count = Math.min(p.handCount, 6);
+    for (let i = 0; i < count; i++) {
+      const back = document.createElement("img");
+      back.className = "card card-back";
+      back.src = encodeURI(CARD_BACK_IMAGE);
+      back.alt = "Hidden card";
+      back.draggable = false;
+      back.style.left = i * 4 + "px";
+      back.style.top = i * 2 + "px";
+      stackEl.appendChild(back);
+    }
+
+    const label = seatEl.querySelector(".seat-name");
+
+    let role =
+        slot === 2 ? "<span class=\"role-icon\">🤝</span> Teammate" : "Opponent";
+    let displayName;
+
+    if (slot === 1) {
+        displayName = state.players[1].name; // Top shows Player 3
+    } else if (slot === 2) {
+        displayName = state.players[2].name; // Left shows Player 2
+    } else {
+        displayName = state.players[3].name; // Right shows Player 4
+    }
+
+    
+    label.innerHTML = `
+        ${role}
+        <span class="player-real-name">
+            ${displayName}${p.isBot ? " 🤖" : ""}
+        </span>
+    `;
+    seatEl.classList.toggle("active-turn", state.turnPlayer === abs);
+  }
+}
+
+function renderOnlineHUD(state) {
+  roundPanelText.textContent = `Round ${state.roundNumber}`;
+
+  const symbol = state.trump ? SUIT_SYMBOL[state.trump] : "";
+  trumpPanelText.innerHTML = state.trump
+    ? `Trump: <span style="color:${suitColor(state.trump)}">${symbol} ${state.trump}</span>`
+    : "Trump: -";
+
+  const team1 = state.players[0].tricks + state.players[2].tricks;
+  const team2 = state.players[1].tricks + state.players[3].tricks;
+  tallyPanelText.textContent = `${team1} - ${team2}`;
+
+  scorePanelText.textContent = `${state.team1Score} - ${state.team2Score}`;
+}
+
+function renderOnlinePoolMarker(state) {
+  for (const idx of [1, 2, 3]) {
+    const marker = seatEls[idx].querySelector(".pool-marker");
+    marker.innerHTML = "";
+    marker.style.display = "none";
+  }
+  const humanMarker = document.getElementById("hand-pool-marker");
+
+  if (state.poolSeat === null || state.poolCount === 0) {
+    if (humanMarker) humanMarker.style.display = "none";
+    return;
+  }
+
+  const slot = slotFor(state.poolSeat);
+  const count = Math.min(state.poolCount, 8);
+
+  if (slot === 0) {
+    if (humanMarker) {
+      humanMarker.style.display = "block";
+      humanMarker.innerHTML = `<span class="pool-badge">${state.poolCount}</span>`;
+    }
+    return;
+  }
+
+  const marker = seatEls[slot].querySelector(".pool-marker");
+  marker.style.display = "block";
+  for (let i = 0; i < count; i++) {
+    const chip = document.createElement("div");
+    chip.className = "pool-chip";
+    chip.style.left = i * 3 + "px";
+    chip.style.top = -i * 3 + "px";
+    marker.appendChild(chip);
+  }
+  const badge = document.createElement("span");
+  badge.className = "pool-badge";
+  badge.textContent = state.poolCount;
+  marker.appendChild(badge);
+}
+
+let onlineTableEls = {}; // absoluteIndex -> element, cleared each trick
+
+function renderOnlineTableCards(state) {
+  const seen = new Set(state.currentTrick.map((e) => e.playerIndex));
+
+  // Remove cards for players no longer in the (cleared) trick.
+  for (const abs in onlineTableEls) {
+    if (!seen.has(Number(abs))) {
+      onlineTableEls[abs].remove();
+      delete onlineTableEls[abs];
+    }
+  }
+
+  for (const entry of state.currentTrick) {
+    if (onlineTableEls[entry.playerIndex]) continue; // already rendered
+
+    const el = createCardFace(entry.card);
+    el.classList.add("table-card");
+    const pos = getPlayPos()[slotFor(entry.playerIndex)];
+    positionAbs(el, pos.x, pos.y);
+    tableCardsEl.appendChild(el);
+    onlineTableEls[entry.playerIndex] = el;
+  }
+
+  // Trick just resolved (server cleared currentTrick back to 0, but
+  // we still have leftover elements) -- fly them to the winner, then
+  // remove after the animation.
+  if (state.currentTrick.length === 0 && Object.keys(onlineTableEls).length > 0 && state.lastTrickWinner !== null) {
+    const target = getSeatPos()[slotFor(state.lastTrickWinner)];
+    for (const abs in onlineTableEls) {
+      const el = onlineTableEls[abs];
+      el.style.transition = "left 550ms ease-in, top 550ms ease-in";
+      positionAbs(el, target.x, target.y);
+    }
+    setTimeout(() => {
+      for (const abs in onlineTableEls) onlineTableEls[abs].remove();
+      onlineTableEls = {};
+    }, 650);
+  }
+}
+
+function renderOnlineState(state) {
+  renderOnlineHand(state);
+  renderOnlineSeats(state);
+  renderOnlineHUD(state);
+  renderOnlinePoolMarker(state);
+  renderOnlineTableCards(state);
+
+  trumpButtonsEl.classList.toggle(
+    "visible",
+    state.phase === "trump" && state.trumpChooserIndex === mySeat
+  );
+
+  if (state.phase === "trump" && state.trumpChooserIndex === mySeat) {
+    challengePopupEl.classList.remove("visible"); // hide Keep/Change popup
+    wireTrumpButtonsOnline(false);
+  }
+
+  const inChallenge = state.phase === "challenge" && state.challengePlayerIndex === mySeat;
+  challengePopupEl.classList.toggle("visible", inChallenge);
+  if (inChallenge) {
+    challengeTitleEl.textContent = "Change the trump?";
+    challengeYesNoEl.style.display = "flex";
+    challengeThinkingEl.style.display = "none";
+    document.getElementById("challenge-yes").onclick = () => {
+      challengePopupEl.classList.remove("visible"); // hide Keep/Change popup
+      send({ type: "challenge_decision", decision: "yes" });
+    };
+    document.getElementById("challenge-no").onclick = () => send({ type: "challenge_decision", decision: "no" });
+  } else if (state.phase === "challenge") {
+    challengePopupEl.classList.add("visible");
+    const chooser = state.players[state.challengePlayerIndex];
+    challengeTitleEl.textContent = `${chooser.name}'s turn`;
+    challengeYesNoEl.style.display = "none";
+    challengeThinkingEl.style.display = "block";
+    challengeThinkingEl.textContent = `${chooser.name} is thinking...`;
+  } else {
+    challengePopupEl.classList.remove("visible");
+  }
+
+  if (state.phase === "match_over") {
+    const winner = state.team1Score >= 5 ? 1 : 2;
+    showRoundBanner(`🏆 TEAM ${winner} WINS THE MATCH! 🏆`, true);
+  }
+}
+
+function wireTrumpButtonsOnline(afterYes) {
+  trumpButtonsEl.querySelectorAll("button").forEach((btn) => {
+    btn.onclick = () => {
+      trumpButtonsEl.classList.remove("visible");
+      send({ type: "choose_trump", suit: btn.dataset.suit, afterYes });
+    };
+  });
+}
+
+function onOnlineCardClick(card) {
+  if (!latestState) return;
+
+  const leadSuit = latestState.currentTrick.length === 0 ? null : latestState.currentTrick[0].card.suit;
+  if (leadSuit !== null) {
+    const hasLead = latestState.hand.some((c) => c.suit === leadSuit);
+    if (hasLead && card.suit !== leadSuit) {
+      showFollowSuitToast();
+      return;
+    }
+  }
+
+  send({ type: "play_card", rank: card.rank, suit: card.suit });
+}
+
+</script>
+</body>
+</html>
