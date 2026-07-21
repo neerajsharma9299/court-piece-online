@@ -19,7 +19,7 @@ const USERS_FILE = path.join(__dirname, "users.json");
 
 const BOT_THINK_MS = 650;
 const CHALLENGE_THINK_MS = 900;
-const TRICK_HOLD_MS = 1000;
+const TRICK_HOLD_MS = 2000;
 const ROUND_BANNER_MS = 2600;
 
 // ---------------- Room management ----------------
