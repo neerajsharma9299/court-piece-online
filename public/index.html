@@ -2007,67 +2007,97 @@ function playCardToTable(playerIndex, card, el, isHumanOrigin) {
 
 function finishTrick() {
   console.log("finishTrick called");
+
   const playedPairs = currentTrick.map((e) => [e.playerIndex, e.card]);
   console.log("Played Cards:", playedPairs);
+
   const winnerIndex = Rules.determineWinner(playedPairs, game.trump);
   console.log("Winner Index:", winnerIndex);
 
-
-
-  const target = getSeatPos()[winnerIndex];
-  for (const entry of currentTrick) {
-    entry.el.style.transition = `left ${TRICK_FLY_MS}ms ease-in, top ${TRICK_FLY_MS}ms ease-in`;
-    positionAbs(entry.el, target.x, target.y);
-  }
-
+  // Keep all 4 cards visible in the center for 2 seconds
   setTimeout(() => {
-    const capture = game.updateScore(winnerIndex, trickNumber);
 
-    if (capture) {
-      poolSeat = null;
-      poolCount = 0;
-      showCaptureBanner(game.players[capture.capturedIndex].name, capture.capturedCount);
-    } else {
-      poolSeat = winnerIndex;
-      poolCount = game.unclaimedTricks;
-    }
-    renderPoolMarker();
-    renderHUD();
+    // Now move cards to the winner
+    const target = getSeatPos()[winnerIndex];
 
-    let challengeFailed = false;
-    if (game.challengeMode && capture) {
-      const capturingTeam = game.teamOf(capture.capturedIndex);
-      if (capturingTeam !== game.challengeTeam) {
-        challengeFailed = true;
-        const losingTeam = game.challengeTeam;
-        if (capturingTeam === 1) game.team1Score += 1; else game.team2Score += 1;
-        game.rotateDealer(false);
-        showRoundBanner(`Team ${losingTeam} failed the challenge! Team ${capturingTeam} scores.`);
-        renderHUD();
-      }
+    for (const entry of currentTrick) {
+      entry.el.style.transition =
+        `left ${TRICK_FLY_MS}ms ease-in, top ${TRICK_FLY_MS}ms ease-in`;
+
+      positionAbs(entry.el, target.x, target.y);
     }
 
+    // After the animation finishes
     setTimeout(() => {
-      tableCardsEl.innerHTML = "";
-      currentTrick = [];
 
-      if (challengeFailed) {
-        afterRoundEnds();
-        return;
+      const capture = game.updateScore(winnerIndex, trickNumber);
+
+      if (capture) {
+        poolSeat = null;
+        poolCount = 0;
+        showCaptureBanner(
+          game.players[capture.capturedIndex].name,
+          capture.capturedCount
+        );
+      } else {
+        poolSeat = winnerIndex;
+        poolCount = game.unclaimedTricks;
       }
 
-      if (trickNumber === 13) {
-        resolveRoundEnd();
-        afterRoundEnds();
-        return;
+      renderPoolMarker();
+      renderHUD();
+
+      let challengeFailed = false;
+
+      if (game.challengeMode && capture) {
+        const capturingTeam = game.teamOf(capture.capturedIndex);
+
+        if (capturingTeam !== game.challengeTeam) {
+          challengeFailed = true;
+
+          const losingTeam = game.challengeTeam;
+
+          if (capturingTeam === 1) game.team1Score += 1;
+          else game.team2Score += 1;
+
+          game.rotateDealer(false);
+
+          showRoundBanner(
+            `Team ${losingTeam} failed the challenge! Team ${capturingTeam} scores.`
+          );
+
+          renderHUD();
+        }
       }
 
-      trickNumber += 1;
-      turnPlayer = winnerIndex;
-      game.currentPlayer = winnerIndex;
-      advanceTurn();
-    }, TRICK_HOLD_MS);
-  }, TRICK_FLY_MS);
+      // Small delay before clearing the table
+      setTimeout(() => {
+
+        tableCardsEl.innerHTML = "";
+        currentTrick = [];
+
+        if (challengeFailed) {
+          afterRoundEnds();
+          return;
+        }
+
+        if (trickNumber === 13) {
+          resolveRoundEnd();
+          afterRoundEnds();
+          return;
+        }
+
+        trickNumber += 1;
+        turnPlayer = winnerIndex;
+        game.currentPlayer = winnerIndex;
+
+        advanceTurn();
+
+      }, 300);
+
+    }, TRICK_FLY_MS);
+
+  }, TRICK_HOLD_MS);
 }
 
 function resolveRoundEnd() {
