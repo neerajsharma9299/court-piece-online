@@ -271,28 +271,36 @@ function isValidCardForSeat(room, seatIndex, card) {
 function applyCardPlay(room, seatIndex, card) {
   const g = room.game;
   const player = g.players[seatIndex];
-  const idx = player.hand.findIndex((c) => c.rank === card.rank && c.suit === card.suit);
+
+  const idx = player.hand.findIndex(
+    (c) => c.rank === card.rank && c.suit === card.suit
+  );
+
   if (idx === -1) return false;
 
   player.hand.splice(idx, 1);
   room.currentTrick.push({ playerIndex: seatIndex, card });
 
   if (room.currentTrick.length === 4) {
-    // FIX: don't optimistically advance turnPlayer here. Doing so
-    // broadcasts a "someone's turn" state during the ~400ms window
-    // before finishTrick() actually resolves the trick -- a fast
-    // client (or a bot timer) could sneak in a 5th card during that
-    // gap, since the turn/phase check would still pass. Setting
-    // turnPlayer to null means no seatIndex can match it until
-    // finishTrick() assigns the real next player.
+    // Keep all four cards visible for 2 seconds.
     room.turnPlayer = null;
     room.broadcastState();
-    setTimeout(() => finishTrick(room), 400);
+
+    setTimeout(() => finishTrick(room), 2000);
   } else {
-    room.turnPlayer = (seatIndex + 1) % 4;
+    // Pause 1 second before the next player's turn.
+    room.turnPlayer = null;
     room.broadcastState();
-    advanceTurn(room);
+
+    setTimeout(() => {
+      if (room.phase !== "trick" || room.currentTrick.length === 4) return;
+
+      room.turnPlayer = (seatIndex + 1) % 4;
+      room.broadcastState();
+      advanceTurn(room);
+    }, 1000);
   }
+
   return true;
 }
 
