@@ -2736,7 +2736,22 @@ const Voice = (() => {
   let muted = false;
   const peers = {};
   const audios = {};
-  const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+  const rtcConfig = {
+    iceServers: [
+      { urls: "stun:stun.l.google.com:19302" },
+
+      {
+        urls: "turn:openrelay.metered.ca:80",
+        username: "openrelayproject",
+        credential: "openrelayproject"
+      },
+      {
+        urls: "turn:openrelay.metered.ca:443",
+        username: "openrelayproject",
+        credential: "openrelayproject"
+      }
+    ]
+  };
 
   function ensurePeer(seat) {
     if (peers[seat]) return peers[seat];
@@ -2747,6 +2762,7 @@ const Voice = (() => {
     pc.onicecandidate = (e) => {
       if (e.candidate) send({ type: "voice_signal", to: seat, data: { candidate: e.candidate } });
     };
+    
     pc.ontrack = (e) => {
       let audio = audios[seat];
       if (!audio) {
