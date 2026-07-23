@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "start": "node server.js",
+    "postinstall": "npm rebuild sqlite3 --build-from-source"
+  },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "express": "^5.2.1",
