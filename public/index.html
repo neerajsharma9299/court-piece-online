@@ -2704,17 +2704,18 @@ function handleServerMessage(msg) {
   if (msg.type === "room_voice_state") {
     const micBtn = document.getElementById("mic-toggle-btn");
 
-    if (msg.enabled) {
-      micBtn.style.display = "block";
-    } else {
-      micBtn.style.display = "none";
+    if (micBtn) {
+      micBtn.style.display = msg.enabled ? "block" : "none";
+    }
 
-      // Force mute for everyone
-      Voice.disable?.();
+    // Just mute locally if voice is disabled
+    if (!msg.enabled && typeof Voice !== "undefined" && Voice.setMuted) {
+      Voice.setMuted(true);
     }
 
     return;
   }
+  
   if (msg.type === "joined") {
     mySeat = msg.seat;
     myRoomCode = msg.code;
