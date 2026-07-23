@@ -12,7 +12,11 @@ const fs = require("fs");
 const path = require("path");
 const { acceptUpgrade } = require("./ws-lite.js");
 const { Game, Rules, Bot, Deck, botPickTrumpSuit } = require("./engine.js");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const db = require("./database");
 
+const JWT_SECRET = "change_this_secret";
 const PORT = process.env.PORT || 8080;
 const PUBLIC_DIR = path.join(__dirname, "public");
 const USERS_FILE = path.join(__dirname, "users.json");
@@ -436,6 +440,17 @@ function afterRoundEnds(room) {
   }, ROUND_BANNER_MS);
 }
 
+// Re-starts the SAME room (same sockets, seats, and names) with a
+// brand-new Game -- used by the "Play Again" button on the
+// match-over popup. Only the room creator (seat 0) may trigger this.
+function restartMatch(room) {
+  room.game = new Game();
+  room.started = true;
+  room.game.jackToss();
+  room.broadcastEvent(`${room.names[room.game.dealer]} is the dealer.`);
+  startRound(room);
+}
+
 // ---------------- Message handling ----------------
 
 function handleMessage(room, seatIndex, msg) {
@@ -467,6 +482,14 @@ function handleMessage(room, seatIndex, msg) {
         break;
       }
       applyCardPlay(room, seatIndex, card);
+      break;
+    }
+    case "play_again": {
+      // Only the room creator can start a fresh match, and only once
+      // the current one has actually ended.
+      if (seatIndex === 0 && room.phase === "match_over") {
+        restartMatch(room);
+      }
       break;
     }
     default:
@@ -511,7 +534,125 @@ function serveStatic(req, res) {
   });
 }
 
-const server = http.createServer(serveStatic);
+const server = http.createServer((req, res) => {
+
+  // ---------- REGISTER ----------
+  if (req.method === "POST" && req.url === "/register") {
+
+    let body = "";
+
+    req.on("data", chunk => body += chunk);
+
+    req.on("end", async () => {
+
+      try {
+        console.log("REGISTER BODY:", body);
+
+        const { username, password } = JSON.parse(body);
+
+        const playerId =
+          "CP-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+
+        const hash = await bcrypt.hash(password, 10);
+
+        db.run(
+          `INSERT INTO users (username, password_hash, player_id)
+           VALUES (?, ?, ?)`,
+          [username, hash, playerId],
+          function (err) {
+
+            if (err) {
+              res.writeHead(400, { "Content-Type": "application/json" });
+              res.end(JSON.stringify({
+                error: "Username already exists"
+              }));
+              return;
+            }
+
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({
+              success: true,
+              playerId
+            }));
+          }
+        );
+
+      } catch (e) {
+        console.error("REGISTER ERROR:", e);
+        res.writeHead(400);
+        res.end("Invalid request");
+      }
+    });
+
+    return;
+  }
+
+  // ---------- LOGIN ----------
+  if (req.method === "POST" && req.url === "/login") {
+
+    let body = "";
+
+    req.on("data", chunk => body += chunk);
+
+    req.on("end", () => {
+
+      try {
+        const { username, password } = JSON.parse(body);
+
+        db.get(
+          `SELECT * FROM users WHERE username = ?`,
+          [username],
+          async (err, user) => {
+
+            if (!user) {
+              res.writeHead(401, { "Content-Type": "application/json" });
+              res.end(JSON.stringify({
+                error: "Invalid username or password"
+              }));
+              return;
+            }
+
+            const ok = await bcrypt.compare(password, user.password_hash);
+
+            if (!ok) {
+              res.writeHead(401, { "Content-Type": "application/json" });
+              res.end(JSON.stringify({
+                error: "Invalid username or password"
+              }));
+              return;
+            }
+
+            const token = jwt.sign(
+              {
+                userId: user.id,
+                username: user.username,
+                playerId: user.player_id
+              },
+              JWT_SECRET,
+              { expiresIn: "30d" }
+            );
+
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({
+              token,
+              username: user.username,
+              playerId: user.player_id
+            }));
+          }
+        );
+
+      } catch (e) {
+        res.writeHead(400);
+        res.end("Invalid request");
+      }
+    });
+
+    return;
+  }
+
+  // ---------- STATIC FILES ----------
+  serveStatic(req, res);
+});
 
 server.on("upgrade", (req, socket) => {
   const ws = acceptUpgrade(req, socket);
@@ -617,6 +758,19 @@ server.on("upgrade", (req, socket) => {
       const targetId = String(msg.playerId || "").toUpperCase();
       if (!me || !me.friends.includes(targetId) || !joinedRoom || seatIndex !== 0 || msg.code !== joinedRoom.code) return;
       sendWs(onlinePlayers.get(targetId), { type: "friend_invite", name: me.name, code: joinedRoom.code });
+      return;
+    }
+
+    // -------- WebRTC voice-chat signaling relay --------
+    // The client handles all the actual peer-connection logic; the
+    // server's only job is to forward an offer/answer/ICE-candidate
+    // payload to the right seat in the same room. `to` is the target
+    // seat index; the recipient is told which seat it came `from`.
+    if (msg.type === "voice_signal") {
+      if (joinedRoom && seatIndex !== null && typeof msg.to === "number") {
+        const targetWs = joinedRoom.sockets[msg.to];
+        sendWs(targetWs, { type: "voice_signal", from: seatIndex, data: msg.data });
+      }
       return;
     }
 

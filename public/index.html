@@ -394,6 +394,25 @@
 
   /* ---------- Menu / Lobby / How-to-play (full viewport, above everything) ---------- */
 
+  #mic-toggle-btn {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 60;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1.5px solid var(--brass);
+    background: rgba(10, 20, 14, 0.8);
+    color: var(--cream);
+    cursor: pointer;
+    display: none;
+  }
+  #mic-toggle-btn.on { border-color: #6bd08a; color: #b9f2c8; }
+  #mic-toggle-btn.muted { border-color: var(--red-suit); color: #ffb4a8; }
+
   .full-overlay {
     position: fixed;
     inset: 0;
@@ -765,6 +784,10 @@
 
     /* Menu button removed -- back-button/exit confirmation (in JS)
        handles returning to the menu instead. */
+    #mic-toggle-btn {
+      font-size: 15px;
+      padding: 10px 16px;
+    }
 
     /* ---- Intro overlay ---- */
     #intro-title { font-size: 42px; }
@@ -893,14 +916,80 @@
   </div>
 </div>
 
+<button id="mic-toggle-btn" title="Voice chat with your table">🎤 Enable Mic</button>
+
 <!-- Main menu -->
 <div id="menu-overlay" class="full-overlay visible">
   <h1 class="menu-title">Court Piece</h1>
   <p class="menu-subtitle">A trick-taking card game for four</p>
   <button id="menu-play-bots" class="menu-btn primary">Play vs Bots</button>
   <button id="menu-play-online" class="menu-btn primary">Play Online</button>
+  <button id="menu-friends" class="menu-btn">👥 Friends</button>
+  <button id="menu-account" class="menu-btn">🙍 Account</button>
+  <button id="menu-settings" class="menu-btn">⚙️ Settings</button>
   <button id="menu-how-to-play" class="menu-btn">How to Play</button>
 </div>
+
+<!-- Account -->
+<div id="account-overlay" class="full-overlay">
+  <div class="lobby-panel">
+    <h2>Account</h2>
+    <div class="lobby-field">
+      <label for="account-name-input">Your display name</label>
+      <input id="account-name-input" type="text" maxlength="20" placeholder="Player">
+    </div>
+    <div class="friend-section" style="border-top:none; margin-top:6px; padding-top:0;">
+      <h3>Your Player ID</h3>
+      <div id="account-my-id" class="friend-id">Not connected yet</div>
+    </div>
+    <button id="account-connect-btn" class="menu-btn primary" style="width:100%; margin-top:16px;">Connect</button>
+    <p id="account-status" style="min-height:18px; font-size:13px; color:#ffb4a8; margin-top:10px;"></p>
+    <button id="account-close-btn" class="menu-btn small" style="margin-top:14px;">Back to Menu</button>
+  </div>
+</div>
+
+<!-- Friends -->
+<div id="friends-overlay" class="full-overlay">
+  <div class="lobby-panel">
+    <h2>Friends</h2>
+    <div class="lobby-row">
+      <div class="lobby-field"><label for="friend-id-input">Friend's Player ID</label><input id="friend-id-input" maxlength="16" placeholder="CP-XXXXXX"></div>
+      <button id="friend-add" class="menu-btn small">Add</button>
+    </div>
+    <p id="friends-status" style="min-height:18px; font-size:13px; color:#ffb4a8; margin-top:4px;"></p>
+    <div class="friend-section" style="border-top:none; padding-top:4px;">
+      <h3>Requests</h3>
+      <ul id="friend-requests" class="friend-list"></ul>
+      <h3 style="margin-top:14px;">Your Friends</h3>
+      <ul id="friend-list" class="friend-list"></ul>
+    </div>
+    <button id="friends-close-btn" class="menu-btn small" style="margin-top:14px;">Back to Menu</button>
+  </div>
+</div>
+
+<!-- Settings -->
+<div id="settings-overlay" class="full-overlay">
+  <div class="lobby-panel">
+    <h2>Settings</h2>
+    <div class="lobby-row" style="align-items:center;">
+      <label style="flex:1; text-align:left; font-size:15px;">Sound effects</label>
+      <input id="settings-sound-toggle" type="checkbox" style="width:22px; height:22px;">
+    </div>
+    <button id="settings-close-btn" class="menu-btn small" style="margin-top:18px;">Back to Menu</button>
+  </div>
+</div>
+
+<!-- Match over -->
+<div id="match-over-modal" class="full-overlay" style="z-index:260;">
+  <div class="how-to-play-panel" style="text-align:center; max-width:420px;">
+    <h2 id="match-over-title">🏆 Team 1 Wins the Match!</h2>
+    <p id="match-over-sub">Final score: 5 - 0</p>
+    <button id="match-over-play-again" class="menu-btn primary" style="width:100%; margin-top:6px;">Play Again</button>
+    <p id="match-over-wait" style="display:none; font-size:14px; color:var(--cream); opacity:.8; margin-top:10px;">Waiting for the host to start a new game...</p>
+    <button id="match-over-menu" class="menu-btn small" style="margin-top:12px;">Main Menu</button>
+  </div>
+</div>
+
 
 <!-- How to play -->
 <div id="how-to-play-overlay" class="full-overlay">
@@ -968,17 +1057,7 @@
       <div id="lobby-room-code">-----</div>
       <ul id="lobby-player-list"></ul>
       <button id="lobby-start-bots" class="menu-btn primary" style="width:100%; display:none;">Start Now (fill empty seats with bots)</button>
-    </div>
-
-    <div class="friend-section">
-      <h3>Your Player ID</h3>
-      <div id="friend-my-id" class="friend-id">Connect to get your ID</div>
-      <div class="lobby-row" style="margin-top:10px;">
-        <div class="lobby-field"><label for="friend-id-input">Friend's Player ID</label><input id="friend-id-input" maxlength="16" placeholder="CP-XXXXXX"></div>
-        <button id="friend-add" class="menu-btn small">Add</button>
-      </div>
-      <ul id="friend-requests" class="friend-list"></ul>
-      <ul id="friend-list" class="friend-list"></ul>
+      <button id="lobby-invite-friends" class="menu-btn small" style="width:100%; margin-top:8px;">👥 Invite Friends</button>
     </div>
 
     <button id="lobby-back" class="menu-btn small" style="margin-top: 18px;">Back to Menu</button>
@@ -1523,6 +1602,68 @@ let acceptingHumanClick = false;
 let poolSeat = null;
 let poolCount = 0;
 
+// ---------------- Sound Engine ----------------
+// Simple Web Audio synth -- no external sound files needed. Card
+// clicks are short ticks; round/match wins are little chime
+// sequences. Muted state persists across sessions.
+
+const SoundEngine = (() => {
+  let ctx = null;
+  let muted = localStorage.getItem("courtPieceMuted") === "1";
+
+  function getCtx() {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === "suspended") ctx.resume();
+    return ctx;
+  }
+
+  function tone(freq, duration, type, startDelay, volume) {
+    if (muted) return;
+    try {
+      const c = getCtx();
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type || "sine";
+      osc.frequency.value = freq;
+      osc.connect(gain);
+      gain.connect(c.destination);
+      const t0 = c.currentTime + (startDelay || 0);
+      gain.gain.setValueAtTime(volume || 0.15, t0);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+      osc.start(t0);
+      osc.stop(t0 + duration + 0.03);
+    } catch (e) { /* audio not available -- fail silently */ }
+  }
+
+  return {
+    isMuted: () => muted,
+    setMuted(value) {
+      muted = value;
+      localStorage.setItem("courtPieceMuted", value ? "1" : "0");
+    },
+    cardClick() {
+      tone(680, 0.05, "square", 0, 0.10);
+    },
+    trickCapture() {
+      tone(520, 0.12, "triangle", 0, 0.16);
+      tone(780, 0.12, "triangle", 0.08, 0.13);
+    },
+    roundWin() {
+      [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.18, "sine", i * 0.11, 0.18));
+    },
+    matchWin() {
+      [523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, 0.22, "sine", i * 0.13, 0.2));
+      [784, 1046, 1318].forEach((f, i) => tone(f, 0.28, "triangle", 0.9 + i * 0.13, 0.18));
+    }
+  };
+})();
+
+// Which flow the player is currently in -- "bots" or "online" --
+// set once startIntro()/enterGameView() runs. Used to decide what
+// the match-over "Play Again" button should do.
+let currentMode = null;
+let matchOverShown = false;
+
 // ---------------- Exit confirmation (replaces the old Menu button) ----------------
 // There's no visible "quit" button during play any more. Instead, the
 // device/browser back action is intercepted while a game (bots or
@@ -1742,12 +1883,18 @@ function renderPoolMarker() {
 }
 
 function showCaptureBanner(name, count) {
+  SoundEngine.trickCapture();
   captureBannerEl.textContent = `🔥 ${name} captured ${count} trick${count !== 1 ? "s" : ""}!`;
   captureBannerEl.classList.add("visible");
   setTimeout(() => captureBannerEl.classList.remove("visible"), CAPTURE_BANNER_MS);
 }
 
 function showRoundBanner(text, persistent = false) {
+  if (/wins the match/i.test(text)) {
+    SoundEngine.matchWin();
+  } else if (/won the round|swept the round/i.test(text)) {
+    SoundEngine.roundWin();
+  }
   roundBannerEl.textContent = text;
   roundBannerEl.classList.add("visible");
   if (!persistent) {
@@ -1764,6 +1911,10 @@ function showFollowSuitToast() {
 
 function startIntro() {
   markInGame();
+  currentMode = "bots";
+  matchOverShown = false;
+  if (typeof Voice !== "undefined" && Voice.isEnabled()) Voice.disable();
+  micToggleBtn.style.display = "none";
   introOverlay.classList.add("visible");
   introButton.style.display = "inline-block";
   introText.textContent = "Draw for dealer";
@@ -1946,6 +2097,7 @@ function onHumanCardClick(card, el) {
     return;
   }
 
+  SoundEngine.cardClick();
   acceptingHumanClick = false;
 
   const hand = game.players[0].hand;
@@ -2136,6 +2288,7 @@ function afterRoundEnds() {
     setTimeout(() => {
       const winner = game.team1Score >= 5 ? 1 : 2;
       showRoundBanner(`🏆 TEAM ${winner} WINS THE MATCH! 🏆`, true);
+      showMatchOverModal(winner, game.team1Score, game.team2Score);
     }, ROUND_BANNER_MS - 300);
     return;
   }
@@ -2144,6 +2297,15 @@ function afterRoundEnds() {
     game.roundNumber += 1;
     startRound();
   }, ROUND_BANNER_MS);
+}
+
+function restartBotsMatch() {
+  game.team1Score = 0;
+  game.team2Score = 0;
+  game.roundNumber = 1;
+  game.dealer = 3;
+  matchOverShown = false;
+  startIntro();
 }
 
 // ---------------- Boot ----------------
@@ -2184,11 +2346,39 @@ const lobbyRoomCode = document.getElementById("lobby-room-code");
 const lobbyPlayerList = document.getElementById("lobby-player-list");
 const lobbyStartBotsBtn = document.getElementById("lobby-start-bots");
 const lobbyBackBtn = document.getElementById("lobby-back");
-const friendMyId = document.getElementById("friend-my-id");
+const lobbyInviteFriendsBtn = document.getElementById("lobby-invite-friends");
 const friendIdInput = document.getElementById("friend-id-input");
 const friendAddBtn = document.getElementById("friend-add");
 const friendRequestsEl = document.getElementById("friend-requests");
 const friendListEl = document.getElementById("friend-list");
+const friendsStatus = document.getElementById("friends-status");
+
+const menuFriendsBtn = document.getElementById("menu-friends");
+const menuAccountBtn = document.getElementById("menu-account");
+const menuSettingsBtn = document.getElementById("menu-settings");
+
+const accountOverlay = document.getElementById("account-overlay");
+const accountNameInput = document.getElementById("account-name-input");
+const accountMyId = document.getElementById("account-my-id");
+const accountConnectBtn = document.getElementById("account-connect-btn");
+const accountStatus = document.getElementById("account-status");
+const accountCloseBtn = document.getElementById("account-close-btn");
+
+const friendsOverlay = document.getElementById("friends-overlay");
+const friendsCloseBtn = document.getElementById("friends-close-btn");
+
+const settingsOverlay = document.getElementById("settings-overlay");
+const settingsSoundToggle = document.getElementById("settings-sound-toggle");
+const settingsCloseBtn = document.getElementById("settings-close-btn");
+
+const micToggleBtn = document.getElementById("mic-toggle-btn");
+
+const matchOverModal = document.getElementById("match-over-modal");
+const matchOverTitle = document.getElementById("match-over-title");
+const matchOverSub = document.getElementById("match-over-sub");
+const matchOverPlayAgainBtn = document.getElementById("match-over-play-again");
+const matchOverWaitText = document.getElementById("match-over-wait");
+const matchOverMenuBtn = document.getElementById("match-over-menu");
 
 // ---------------- Online state ----------------
 
@@ -2201,7 +2391,7 @@ let playerId = localStorage.getItem("courtPiecePlayerId") || null;
 let friends = [];
 
 function renderFriends() {
-  friendMyId.textContent = playerId || "Connect to get your ID";
+  accountMyId.textContent = playerId || "Not connected yet";
   friendRequestsEl.innerHTML = "";
   friendListEl.innerHTML = "";
   friends.filter(f => f.status === "incoming").forEach(f => {
@@ -2270,6 +2460,110 @@ lobbyBackBtn.addEventListener("click", () => {
   menuOverlay.classList.add("visible");
 });
 
+// ---------------- Account / Friends / Settings screens ----------------
+// These are reachable straight from the main menu (not just once
+// you're inside an online room), so a player can log in once, see
+// their ID, and manage friends before ever creating/joining a room.
+
+accountNameInput.value = localStorage.getItem("courtPieceName") || "";
+lobbyNameInput.value = localStorage.getItem("courtPieceName") || "";
+lobbyNameInput.addEventListener("change", () => {
+  if (lobbyNameInput.value.trim()) localStorage.setItem("courtPieceName", lobbyNameInput.value.trim());
+});
+
+function ensureConnected(onReady) {
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    if (onReady) onReady();
+    return;
+  }
+  connectSocket(() => { if (onReady) onReady(); });
+}
+
+menuAccountBtn.addEventListener("click", () => {
+  menuOverlay.classList.remove("visible");
+  accountOverlay.classList.add("visible");
+  accountMyId.textContent = playerId || "Not connected yet";
+});
+
+accountConnectBtn.addEventListener("click", () => {
+  const name = accountNameInput.value.trim() || "Player";
+  localStorage.setItem("courtPieceName", name);
+  lobbyNameInput.value = name;
+  accountStatus.textContent = "Connecting...";
+  ensureConnected(() => { accountStatus.textContent = "Connected."; });
+});
+
+accountCloseBtn.addEventListener("click", () => {
+  accountOverlay.classList.remove("visible");
+  menuOverlay.classList.add("visible");
+});
+
+menuFriendsBtn.addEventListener("click", () => {
+  menuOverlay.classList.remove("visible");
+  friendsOverlay.classList.add("visible");
+  friendsStatus.textContent = "";
+  if (!socket || socket.readyState !== WebSocket.OPEN) {
+    const name = localStorage.getItem("courtPieceName") || accountNameInput.value.trim() || "Player";
+    friendsStatus.textContent = "Connecting...";
+    ensureConnected(() => { friendsStatus.textContent = ""; renderFriends(); });
+  } else {
+    renderFriends();
+  }
+});
+
+friendsCloseBtn.addEventListener("click", () => {
+  friendsOverlay.classList.remove("visible");
+  menuOverlay.classList.add("visible");
+});
+
+lobbyInviteFriendsBtn.addEventListener("click", () => {
+  lobbyOverlay.classList.remove("visible");
+  friendsOverlay.classList.add("visible");
+  friendsStatus.textContent = "";
+  renderFriends();
+});
+
+menuSettingsBtn.addEventListener("click", () => {
+  menuOverlay.classList.remove("visible");
+  settingsOverlay.classList.add("visible");
+  settingsSoundToggle.checked = !SoundEngine.isMuted();
+});
+
+settingsSoundToggle.addEventListener("change", () => {
+  SoundEngine.setMuted(!settingsSoundToggle.checked);
+});
+
+settingsCloseBtn.addEventListener("click", () => {
+  settingsOverlay.classList.remove("visible");
+  menuOverlay.classList.add("visible");
+});
+
+// ---------------- Match-over restart popup ----------------
+
+function showMatchOverModal(winnerTeam, score1, score2) {
+  matchOverTitle.textContent = `🏆 Team ${winnerTeam} Wins the Match!`;
+  matchOverSub.textContent = `Final score: ${score1} - ${score2}`;
+
+  const canRestart = currentMode === "bots" || (currentMode === "online" && isCreator);
+  matchOverPlayAgainBtn.style.display = canRestart ? "inline-block" : "none";
+  matchOverWaitText.style.display = canRestart ? "none" : "block";
+
+  matchOverModal.classList.add("visible");
+}
+
+matchOverPlayAgainBtn.addEventListener("click", () => {
+  matchOverModal.classList.remove("visible");
+  if (currentMode === "online") {
+    send({ type: "play_again" });
+  } else {
+    restartBotsMatch();
+  }
+});
+
+matchOverMenuBtn.addEventListener("click", () => {
+  window.location.reload();
+});
+
 function serverUrl() {
   if (window.location.protocol === "file:") {
     const addr = (lobbyServerInput.value || "localhost:8080").trim();
@@ -2287,7 +2581,7 @@ function connectSocket(onOpen) {
 
   socket.addEventListener("open", () => {
     roundBannerEl.classList.remove("visible"); // hide old "Connection lost" banner
-    send({ type: "identify", playerId, name: lobbyNameInput.value || "Player" });
+    send({ type: "identify", playerId, name: lobbyNameInput.value || localStorage.getItem("courtPieceName") || "Player" });
     if (onOpen) onOpen();
   });
   socket.addEventListener("message", (event) => {
@@ -2334,14 +2628,17 @@ lobbyStartBotsBtn.addEventListener("click", () => {
 
 friendAddBtn.addEventListener("click", () => {
   const id = friendIdInput.value.trim().toUpperCase();
-  if (!id) { lobbyStatus.textContent = "Enter your friend's Player ID."; return; }
+  if (!id) { friendsStatus.textContent = "Enter your friend's Player ID."; return; }
+  if (!socket || socket.readyState !== WebSocket.OPEN) { friendsStatus.textContent = "Connect first (see Account)."; return; }
   send({ type: "add_friend", playerId: id });
+  friendsStatus.textContent = "Request sent.";
   friendIdInput.value = "";
 });
 
 // ---------------- Server message handling ----------------
 
 function handleServerMessage(msg) {
+  if (msg.type === "voice_signal") { Voice.handleSignal(msg.from, msg.data); return; }
   if (msg.type === "identity") {
     playerId = msg.playerId; localStorage.setItem("courtPiecePlayerId", playerId); renderFriends(); return;
   }
@@ -2408,12 +2705,146 @@ function updateLobbyPlayerList(msg) {
 
 function enterGameView() {
   markInGame();
+  currentMode = "online";
+  matchOverShown = false;
   lobbyOverlay.classList.remove("visible");
   introOverlay.classList.remove("visible");
   menuOverlay.classList.remove("visible");
+  micToggleBtn.style.display = "inline-block";
 }
 
 // ---------------- Rendering (online) ----------------
+
+// ---------------- Voice chat (WebRTC mesh, signaled over the same socket) ----------------
+// Each pair of connected players opens a direct RTCPeerConnection;
+// offers/answers/ICE candidates are relayed through the existing
+// WebSocket as "voice_signal" messages (server just forwards them to
+// the target seat -- see server.js). Bot seats never answer, so
+// calling them is harmless.
+
+const Voice = (() => {
+  let localStream = null;
+  let enabled = false;
+  let muted = false;
+  const peers = {};
+  const audios = {};
+  const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+
+  function ensurePeer(seat) {
+    if (peers[seat]) return peers[seat];
+    const pc = new RTCPeerConnection(rtcConfig);
+    if (localStream) {
+      localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+    }
+    pc.onicecandidate = (e) => {
+      if (e.candidate) send({ type: "voice_signal", to: seat, data: { candidate: e.candidate } });
+    };
+    pc.ontrack = (e) => {
+      let audio = audios[seat];
+      if (!audio) {
+        audio = document.createElement("audio");
+        audio.autoplay = true;
+        audio.id = `voice-audio-${seat}`;
+        document.body.appendChild(audio);
+        audios[seat] = audio;
+      }
+      audio.srcObject = e.streams[0];
+    };
+    peers[seat] = pc;
+    return pc;
+  }
+
+  async function callSeat(seat) {
+    const pc = ensurePeer(seat);
+    try {
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      send({ type: "voice_signal", to: seat, data: { sdp: offer } });
+    } catch (e) { /* peer may not be reachable yet -- ignore */ }
+  }
+
+  async function handleSignal(fromSeat, data) {
+    if (fromSeat === null || fromSeat === undefined) return;
+    const pc = ensurePeer(fromSeat);
+    try {
+      if (data.sdp) {
+        await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+        if (data.sdp.type === "offer") {
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          send({ type: "voice_signal", to: fromSeat, data: { sdp: answer } });
+        }
+      } else if (data.candidate) {
+        await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+      }
+    } catch (e) { /* ignore malformed/late signals */ }
+  }
+
+  async function enable() {
+    if (enabled) return true;
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e) {
+      alert("Couldn't access your microphone. Check your browser/OS permissions.");
+      return false;
+    }
+    enabled = true;
+    muted = false;
+    for (let seat = 0; seat < 4; seat++) {
+      if (seat !== mySeat) callSeat(seat);
+    }
+    return true;
+  }
+
+  function disable() {
+    enabled = false;
+    if (localStream) localStream.getTracks().forEach((t) => t.stop());
+    localStream = null;
+    Object.values(peers).forEach((pc) => { try { pc.close(); } catch (e) {} });
+    for (const k of Object.keys(peers)) delete peers[k];
+    Object.values(audios).forEach((a) => a.remove());
+    for (const k of Object.keys(audios)) delete audios[k];
+  }
+
+  function toggleMute() {
+    if (!localStream) return muted;
+    muted = !muted;
+    localStream.getAudioTracks().forEach((t) => { t.enabled = !muted; });
+    return muted;
+  }
+
+  return {
+    enable, disable, handleSignal, toggleMute,
+    isEnabled: () => enabled,
+    isMuted: () => muted
+  };
+})();
+
+function updateMicButtonLabel() {
+  if (!Voice.isEnabled()) {
+    micToggleBtn.textContent = "🎤 Enable Mic";
+    micToggleBtn.classList.remove("on", "muted");
+  } else if (Voice.isMuted()) {
+    micToggleBtn.textContent = "🔇 Unmute";
+    micToggleBtn.classList.remove("on");
+    micToggleBtn.classList.add("muted");
+  } else {
+    micToggleBtn.textContent = "🎤 Mute";
+    micToggleBtn.classList.remove("muted");
+    micToggleBtn.classList.add("on");
+  }
+}
+
+micToggleBtn.addEventListener("click", async () => {
+  if (!Voice.isEnabled()) {
+    const ok = await Voice.enable();
+    if (ok) updateMicButtonLabel();
+    return;
+  }
+  Voice.toggleMute();
+  updateMicButtonLabel();
+});
+
 
 function renderOnlineHand(state) {
   handEl.innerHTML = "";
@@ -2640,6 +3071,13 @@ function renderOnlineState(state) {
   if (state.phase === "match_over") {
     const winner = state.team1Score >= 5 ? 1 : 2;
     showRoundBanner(`🏆 TEAM ${winner} WINS THE MATCH! 🏆`, true);
+    if (!matchOverShown) {
+      matchOverShown = true;
+      showMatchOverModal(winner, state.team1Score, state.team2Score);
+    }
+  } else {
+    matchOverShown = false;
+    matchOverModal.classList.remove("visible");
   }
 }
 
@@ -2664,6 +3102,7 @@ function onOnlineCardClick(card) {
     }
   }
 
+  SoundEngine.cardClick();
   send({ type: "play_card", rank: card.rank, suit: card.suit });
 }
 
