@@ -2708,14 +2708,10 @@ function handleServerMessage(msg) {
       micBtn.style.display = msg.enabled ? "block" : "none";
     }
 
-    // Just mute locally if voice is disabled
-    if (!msg.enabled && typeof Voice !== "undefined" && Voice.setMuted) {
-      Voice.setMuted(true);
-    }
 
     return;
   }
-  
+
   if (msg.type === "joined") {
     mySeat = msg.seat;
     myRoomCode = msg.code;
