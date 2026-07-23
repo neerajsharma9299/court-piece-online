@@ -418,6 +418,37 @@
     padding: 2px 5px; /* roughly half the size */
   }
 }
+  #voice-room-toggle {
+  position: fixed;
+
+  top: 88px;      /* below the mic button */
+  left: 6px;      /* align with mic button */
+
+  z-index: 60;
+
+  font-family: var(--font-body);
+  font-size: 8px;
+  font-weight: 600;
+
+  padding: 2px 6px;
+  border-radius: 6px;
+
+  border: 1px solid var(--brass);
+  background: rgba(10, 20, 14, 0.85);
+  color: var(--cream);
+  cursor: pointer;
+
+  display: none;
+}
+
+@media (max-width: 700px) {
+  #voice-room-toggle {
+    top: 78px;     /* just below the smaller mobile mic button */
+    left: 4px;
+    font-size: 7px;
+    padding: 2px 5px;
+  }
+}
   #mic-toggle-btn.on { border-color: #6bd08a; color: #b9f2c8; }
   #mic-toggle-btn.muted { border-color: var(--red-suit); color: #ffb4a8; }
 
@@ -925,6 +956,7 @@
 </div>
 
 <button id="mic-toggle-btn" title="Voice chat with your table">🎤 Enable Mic</button>
+<button id="voice-room-toggle" style="display:none;">🔇 All</button>
 
 <!-- Main menu -->
 <div id="menu-overlay" class="full-overlay visible">
@@ -2353,6 +2385,7 @@ const lobbyRoomInfo = document.getElementById("lobby-room-info");
 const lobbyRoomCode = document.getElementById("lobby-room-code");
 const lobbyPlayerList = document.getElementById("lobby-player-list");
 const lobbyStartBotsBtn = document.getElementById("lobby-start-bots");
+const voiceRoomToggle = document.getElementById("voice-room-toggle");
 const lobbyBackBtn = document.getElementById("lobby-back");
 const lobbyInviteFriendsBtn = document.getElementById("lobby-invite-friends");
 const friendIdInput = document.getElementById("friend-id-input");
@@ -2642,6 +2675,20 @@ friendAddBtn.addEventListener("click", () => {
   friendsStatus.textContent = "Request sent.";
   friendIdInput.value = "";
 });
+let roomVoiceEnabled = true;
+
+voiceRoomToggle.addEventListener("click", () => {
+  roomVoiceEnabled = !roomVoiceEnabled;
+
+  // Change button text
+  voiceRoomToggle.textContent = roomVoiceEnabled ? "🔇 All" : "🔊 All";
+
+  // Send the new state to the server
+  send({
+    type: "room_voice_toggle",
+    enabled: roomVoiceEnabled
+  });
+});
 
 // ---------------- Server message handling ----------------
 
@@ -2654,10 +2701,27 @@ function handleServerMessage(msg) {
   if (msg.type === "friend_invite") {
     lobbyCodeInput.value = msg.code; lobbyStatus.textContent = `${msg.name} invited you to room ${msg.code}. Press Join.`; return;
   }
+  if (msg.type === "room_voice_state") {
+    const micBtn = document.getElementById("mic-toggle-btn");
+
+    if (msg.enabled) {
+      micBtn.style.display = "block";
+    } else {
+      micBtn.style.display = "none";
+
+      // Force mute for everyone
+      Voice.disable?.();
+    }
+
+    return;
+  }
   if (msg.type === "joined") {
     mySeat = msg.seat;
     myRoomCode = msg.code;
     isCreator = mySeat === 0;
+    const roomVoiceToggle = document.getElementById("voice-room-toggle");
+
+    roomVoiceToggle.style.display = isCreator ? "block" : "none";
 
     lobbyStatus.textContent = "";
     lobbyRoomInfo.classList.add("visible");
