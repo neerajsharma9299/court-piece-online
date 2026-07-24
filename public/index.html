@@ -99,6 +99,52 @@
   #round-panel { left: 20px; width: 165px; }
   #tally-panel { left: 50%; transform: translateX(-50%); width: 220px; }
   #score-panel { right: 20px; width: 165px; }
+  /* ---------- Target Requirement Tab ---------- */
+
+  #targetTab {
+      position: absolute;
+
+      /* adjust position below score panel */
+      top: 95px;
+      right: 10px;
+
+      background: rgba(10, 20, 14, 0.75);
+      border: 1.5px solid var(--brass);
+      border-radius: 10px;
+
+      padding: 6px 12px;
+
+      color: var(--cream);
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 700;
+
+      text-align: center;
+      z-index: 20;
+
+      white-space: nowrap;
+  }
+
+
+  /* hidden until trump is selected */
+  .target-hidden {
+      display: none;
+  }
+
+
+  /* mobile adjustment */
+  @media (max-width: 700px) {
+
+      #targetTab {
+
+          top: 75px;
+          right: 01px;
+
+          font-size: 11px;
+          padding: 2px 2px;
+      }
+
+  }
 
   /* ---------- Seats ---------- */
 
@@ -864,6 +910,8 @@
       <p class="panel-label">Match Score</p>
       <p class="panel-value" id="score-panel-text">0 - 0</p>
     </div>
+    <!-- Target Requirement Tab -->
+    <div id="targetTab" class="target-hidden"></div>
 
     <div id="trump-panel-holder" style="position:absolute; left:23%; top:95px; transform:translateX(-50%); color:var(--cream); font-family:var(--font-body); font-size:14px; z-index:5;">
       <span id="trump-panel-text">Trump: -</span>
@@ -2691,23 +2739,59 @@ function handleServerMessage(msg) {
   }
 
   if (msg.type === "state") {
-    latestState = msg;
+      latestState = msg;
 
-    if (msg.phase === "lobby" || !isGameVisible()) {
-      updateLobbyPlayerList(msg);
-    }
+      updateTargetTab(msg);
 
-    if (msg.phase !== "lobby") {
-      enterGameView();
-      renderOnlineState(msg);
-    }
+      if (msg.phase === "lobby" || !isGameVisible()) {
+        updateLobbyPlayerList(msg);
+      }
+
+      if (msg.phase !== "lobby") {
+        enterGameView();
+        renderOnlineState(msg);
+      }
   }
 }
+
 
 function isGameVisible() {
   return !menuOverlay.classList.contains("visible") && !lobbyOverlay.classList.contains("visible");
 }
+function updateTargetTab(state) {
 
+  const tab = document.getElementById("targetTab");
+
+  if (!tab) return;
+
+
+  // Court / Challenge
+  if (state.challengeMode && state.challengeTeam != null) {
+
+    tab.classList.remove("target-hidden");
+
+    tab.textContent =
+      "🔥 Team " + state.challengeTeam + ": Need 13 Tricks";
+
+    return;
+  }
+
+
+  // Normal trump
+  if (state.trumpTeam != null) {
+
+    tab.classList.remove("target-hidden");
+
+    tab.textContent =
+      "🎯 Team " + state.trumpTeam + ": Need 8 Tricks";
+
+    return;
+  }
+
+
+  // No trump selected yet
+  tab.classList.add("target-hidden");
+}
 function updateLobbyPlayerList(msg) {
   lobbyPlayerList.innerHTML = "";
   msg.players.forEach((p, i) => {
