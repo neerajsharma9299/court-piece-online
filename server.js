@@ -712,24 +712,7 @@ server.on("upgrade", (req, socket) => {
       if (joinedRoom && seatIndex === 0) maybeStart(joinedRoom);
       return;
     }
-    if (msg.type === "room_voice_toggle") {
-      if (!joinedRoom) return;
 
-      // Only the host (seat 0) can control room voice
-      if (seatIndex !== 0) return;
-
-      joinedRoom.voiceEnabled = !!msg.enabled;
-
-      // Send the new state to every player in the room
-      joinedRoom.players.forEach((p) => {
-        sendWs(p.ws, {
-          type: "room_voice_state",
-          enabled: joinedRoom.voiceEnabled
-        });
-      });
-
-      return;
-    }
 
     // -------- Player identity, friends, and room invitations --------
     // These messages work before a player enters a room, so the lobby can
