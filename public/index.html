@@ -2427,6 +2427,7 @@ let socket = null;
 let mySeat = null;
 let myRoomCode = null;
 let isCreator = false;
+let roomVoiceAllowed = true;
 let latestState = null;
 let playerId = localStorage.getItem("courtPiecePlayerId") || null;
 let friends = [];
@@ -2702,16 +2703,16 @@ function handleServerMessage(msg) {
     lobbyCodeInput.value = msg.code; lobbyStatus.textContent = `${msg.name} invited you to room ${msg.code}. Press Join.`; return;
   }
   if (msg.type === "room_voice_state") {
+    roomVoiceAllowed = !!msg.enabled;
+
     const micBtn = document.getElementById("mic-toggle-btn");
 
     if (micBtn) {
-      micBtn.style.display = msg.enabled ? "block" : "none";
+      micBtn.style.display = roomVoiceAllowed ? "block" : "none";
     }
-
 
     return;
   }
-
   if (msg.type === "joined") {
     mySeat = msg.seat;
     myRoomCode = msg.code;
@@ -2779,7 +2780,7 @@ function enterGameView() {
   lobbyOverlay.classList.remove("visible");
   introOverlay.classList.remove("visible");
   menuOverlay.classList.remove("visible");
-  micToggleBtn.style.display = "inline-block";
+  micToggleBtn.style.display = roomVoiceAllowed ? "inline-block" : "none";
 }
 
 // ---------------- Rendering (online) ----------------
