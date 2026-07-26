@@ -63,6 +63,49 @@
 
   /* ---------- HUD panels ---------- */
 
+  /* ---------- Spades stage (mirrors #stage-wrap / #stage above) ---------- */
+
+  #spades-stage-wrap {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+  }
+
+  #spades-stage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1000px;
+    height: 700px;
+    transform: translate(-50%, -50%);
+    background-color: #0b5d3b;
+    border-radius: 28px;
+    box-shadow:
+      0 0 0 10px #2a1a0e,
+      0 0 0 14px var(--brass-dark),
+      0 30px 80px var(--shadow);
+    overflow: hidden;
+  }
+
+  #spades-round-panel { left: 20px; width: 165px; }
+  #spades-status-panel { left: 50%; transform: translateX(-50%); width: 220px; }
+  #spades-score-panel { right: 20px; width: 165px; }
+
+  #spades-seat-1 { left: 70px; top: 345px; }
+  #spades-seat-2 { left: 500px; top: 55px; }
+  #spades-seat-3 { left: 930px; top: 345px; }
+
+  .spades-bid-label {
+    display: block;
+    margin-top: 3px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brass-bright);
+  }
+
   .panel {
     position: absolute;
     top: 16px;
@@ -284,6 +327,14 @@
   #hand { pointer-events: auto; }
   #hand .hand-card { pointer-events: auto; }
 
+  #spades-hand, #spades-table-cards {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  #spades-hand { pointer-events: auto; }
+  #spades-hand .hand-card { pointer-events: auto; }
+
   /* ---------- Trump / challenge overlays ---------- */
 
   .overlay-panel {
@@ -391,6 +442,60 @@
 
   #intro-overlay.visible { display: flex; }
   #intro-overlay:not(.visible) { display: none; }
+
+  #spades-intro-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(4, 12, 8, 0.92);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    transition: opacity 0.4s;
+  }
+  #spades-intro-overlay.visible { display: flex; }
+  #spades-intro-title {
+    font-family: var(--font-display);
+    font-size: 64px;
+    font-weight: 700;
+    color: var(--brass-bright);
+    letter-spacing: 0.03em;
+    margin: 0 0 6px;
+  }
+  #spades-intro-subtitle {
+    font-family: var(--font-body);
+    color: var(--cream);
+    opacity: 0.8;
+    margin: 0 0 40px;
+    font-size: 15px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  #spades-intro-text {
+    font-family: var(--font-body);
+    color: var(--cream);
+    font-size: 18px;
+    margin-bottom: 24px;
+    min-height: 24px;
+  }
+  #spades-intro-button {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 18px;
+    padding: 14px 40px;
+    border-radius: 10px;
+    border: 1.5px solid var(--brass);
+    background: var(--brass-dark);
+    color: var(--cream);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+  #spades-intro-button:hover {
+    background: var(--brass);
+    color: var(--ink);
+    transform: translateY(-2px);
+  }
 
   #intro-title {
     font-family: var(--font-display);
@@ -889,6 +994,46 @@
     #lobby-player-list { font-size: 14px; }
     #lobby-status { font-size: 13px; }
   }
+
+  /* ---------- Spades mobile (mirrors the Court Piece mobile block) ---------- */
+  @media (max-width: 700px) {
+    #spades-stage-wrap { padding: 0; }
+    #spades-stage {
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100dvh;
+      transform: none !important;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    #spades-round-panel   { left: 2vw;  width: 26vw; top: 6px; }
+    #spades-status-panel  { left: 50%; transform: translateX(-50%); width: 34vw; top: 6px; }
+    #spades-score-panel   { right: 2vw; left: auto; width: 26vw; top: 6px; }
+
+    #spades-seat-1 { left: 13vw; top: 46vh; width: 90px; height: 110px; }
+    #spades-seat-2 { left: 50vw; top: 17vh; width: 90px; height: 110px; }
+    #spades-seat-3 { left: 87vw; top: 46vh; width: 90px; height: 110px; }
+
+    #spades-hand .card {
+      width: 82px;
+      height: 114px;
+      border-radius: 8px;
+      box-shadow: 0 6px 16px rgba(0,0,0,.55);
+    }
+    #spades-hand { position: absolute; inset: 0; pointer-events: auto; bottom: 0; }
+
+    #spades-table-cards .card {
+      width: 60px;
+      height: 84px;
+    }
+
+    #spades-bid-overlay { top: 32vh; }
+    #spades-round-banner { top: 24vh; }
+    #spades-capture-banner { top: 32vh; }
+    #spades-follow-suit-toast { top: 56vh; }
+  }
 </style>
 </head>
 <body>
@@ -975,9 +1120,103 @@
 
 <button id="mic-toggle-btn" title="Voice chat with your table">🎤 Enable Mic</button>
 
+<!-- ============================================================
+     SPADES -- own stage, own overlays. Shares CSS classes with
+     Court Piece (.panel, .seat, .card, .banner, .overlay-panel,
+     .menu-btn, etc.) for a consistent look, but every element has
+     its own ID so nothing here can collide with or affect the
+     Court Piece game above.
+     ============================================================ -->
+<div id="spades-stage-wrap" style="display:none;">
+  <div id="spades-stage">
+
+    <div id="spades-round-panel" class="panel">
+      <p class="panel-label">Round</p>
+      <p class="panel-value" id="spades-round-panel-text">1</p>
+    </div>
+
+    <div id="spades-status-panel" class="panel center_box">
+      <p class="panel-label">Spades</p>
+      <p class="panel-value" id="spades-status-panel-text">Not Broken</p>
+    </div>
+
+    <div id="spades-score-panel" class="panel">
+      <p class="panel-label" id="spades-score-panel-label">Match Score</p>
+      <p class="panel-value" id="spades-score-panel-text">0 - 0</p>
+    </div>
+
+    <!-- Bot seats -->
+    <div id="spades-seat-1" class="seat">
+      <div class="hidden-stack"></div>
+      <div class="seat-name">Player 2</div>
+    </div>
+    <div id="spades-seat-2" class="seat">
+      <div class="hidden-stack"></div>
+      <div class="seat-name">Player 3</div>
+    </div>
+    <div id="spades-seat-3" class="seat">
+      <div class="hidden-stack"></div>
+      <div class="seat-name">Player 4</div>
+    </div>
+
+    <div id="spades-table-cards"></div>
+    <div id="spades-hand"></div>
+
+    <!-- Bidding -->
+    <div id="spades-bid-overlay" class="overlay-panel">
+      <div class="overlay-title">Your Bid</div>
+      <div style="margin-bottom:14px;">
+        <select id="spades-bid-select" style="font-size:18px; padding:8px 12px; border-radius:8px; border:1.5px solid var(--brass); background:rgba(10,20,14,.9); color:var(--cream);"></select>
+      </div>
+      <button class="yesno-btn" id="spades-bid-nil">Bid Nil (0)</button>
+      <button class="yesno-btn" id="spades-bid-confirm">Confirm Bid</button>
+    </div>
+
+    <div id="spades-capture-banner" class="banner"></div>
+    <div id="spades-round-banner" class="banner"></div>
+    <div id="spades-follow-suit-toast" class="banner">You must follow the suit!</div>
+
+    <!-- Intro -->
+    <div id="spades-intro-overlay" class="visible">
+      <h1 id="spades-intro-title">♠ Spades</h1>
+      <p id="spades-intro-subtitle">Trump is always spades</p>
+      <p id="spades-intro-text"></p>
+      <button id="spades-intro-button">Deal</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Spades round summary -->
+<div id="spades-round-summary-modal" class="full-overlay" style="z-index:250;">
+  <div class="how-to-play-panel" style="text-align:center; max-width:460px;">
+    <h2 id="spades-summary-title">Round 1 Results</h2>
+    <div id="spades-summary-body" style="text-align:left; font-size:15px; margin:14px 0;"></div>
+    <button id="spades-summary-continue" class="menu-btn primary" style="width:100%;">Continue</button>
+  </div>
+</div>
+
+<!-- Spades match over -->
+<div id="spades-match-over-modal" class="full-overlay" style="z-index:260;">
+  <div class="how-to-play-panel" style="text-align:center; max-width:420px;">
+    <h2 id="spades-match-over-title">🏆 You Win!</h2>
+    <p id="spades-match-over-sub">Final score: 200 - 130</p>
+    <button id="spades-match-over-play-again" class="menu-btn primary" style="width:100%; margin-top:6px;">Play Again</button>
+    <button id="spades-match-over-menu" class="menu-btn small" style="margin-top:12px;">Main Menu</button>
+  </div>
+</div>
+
+
+<!-- Choose your game -->
+<div id="game-select-overlay" class="full-overlay visible">
+  <h1 class="menu-title">Card Table</h1>
+  <p class="menu-subtitle">Pick a game</p>
+  <button id="select-spades" class="menu-btn primary">♠ Spades</button>
+  <button id="select-court-piece" class="menu-btn primary">🃏 Court Piece</button>
+</div>
 
 <!-- Main menu -->
-<div id="menu-overlay" class="full-overlay visible">
+<div id="menu-overlay" class="full-overlay">
   <h1 class="menu-title">Court Piece</h1>
   <p class="menu-subtitle">A trick-taking card game for four</p>
   <button id="menu-play-bots" class="menu-btn primary">Play vs Bots</button>
@@ -986,6 +1225,7 @@
   <button id="menu-account" class="menu-btn">🙍 Account</button>
   <button id="menu-settings" class="menu-btn">⚙️ Settings</button>
   <button id="menu-how-to-play" class="menu-btn">How to Play</button>
+  <button id="menu-back-to-games" class="menu-btn small" style="margin-top:14px;">← Choose a different game</button>
 </div>
 
 <!-- Account -->
@@ -1048,6 +1288,56 @@
   </div>
 </div>
 
+
+<!-- Spades menu -->
+<div id="spades-menu-overlay" class="full-overlay">
+  <h1 class="menu-title">♠ Spades</h1>
+  <p class="menu-subtitle">Trump is always spades</p>
+  <button id="spades-play-individual" class="menu-btn primary">Play vs Bots · Individual</button>
+  <button id="spades-play-team" class="menu-btn primary">Play vs Bots · Team</button>
+  <button id="spades-how-to-play" class="menu-btn">How to Play</button>
+  <button id="spades-back-to-games" class="menu-btn small" style="margin-top:14px;">← Choose a different game</button>
+</div>
+
+<!-- Spades how to play -->
+<div id="spades-how-to-play-overlay" class="full-overlay">
+  <div class="how-to-play-panel">
+    <h2>How to Play Spades</h2>
+    <p>Spades is a 4-player trick-taking game. Spades are <strong>always
+    trump</strong> -- there's no dealer's choice like in Court Piece.</p>
+
+    <h3>Bidding</h3>
+    <p>Before play, every player looks at their 13 cards and bids how
+    many tricks they think they'll win, from 0 up to 13. A bid of 0 is
+    called <strong>Nil</strong> -- a bet that you'll win zero tricks,
+    worth a big bonus if you pull it off and a big penalty if you
+    don't.</p>
+
+    <h3>Team vs Individual</h3>
+    <p>In <strong>Team</strong> mode you and the player across from you
+    share a combined bid and score together, just like Court Piece's
+    teams. In <strong>Individual</strong> mode all four players bid and
+    score separately -- every player for themselves.</p>
+
+    <h3>Playing a Trick</h3>
+    <p>Follow the suit that was led if you can. Highest card of the led
+    suit wins the trick -- unless a spade is played, which beats
+    everything. You can't <em>lead</em> a spade until spades have been
+    "broken" (played on an earlier trick because a player had no cards
+    of the suit that was led), unless spades are all you have left in
+    hand.</p>
+
+    <h3>Scoring</h3>
+    <p>Make your bid (or your team's combined bid) and you score 10
+    points per trick bid, plus 1 point for every trick you win beyond
+    your bid ("bags"). Fall short of your bid and you lose 10 points
+    per trick bid instead. A successful Nil is worth +100; a failed Nil
+    costs -100. Every 10 bags accumulated costs a 100-point penalty.
+    First to the target score wins.</p>
+
+    <button id="spades-how-to-play-close" class="menu-btn small" style="margin-top: 10px;">Close</button>
+  </div>
+</div>
 
 <!-- How to play -->
 <div id="how-to-play-overlay" class="full-overlay">
@@ -2826,10 +3116,11 @@ const Voice = (() => {
   let muted = false;
   const peers = {};
   const audios = {};
+  const makingOffer = {};
+  const pendingCandidates = {};
   const rtcConfig = {
     iceServers: [
       { urls: "stun:stun.l.google.com:19302" },
-
       {
         urls: "turn:openrelay.metered.ca:80",
         username: "openrelayproject",
@@ -2843,16 +3134,33 @@ const Voice = (() => {
     ]
   };
 
+  // "Perfect negotiation" pattern -- for every pair of seats, the
+  // one with the HIGHER seat number is "polite" (it always yields to
+  // an incoming offer that collides with one it just sent), and the
+  // lower seat is "impolite" (its own offer always wins a collision).
+  // This is what was missing before: when everyone taps the mic at
+  // once, each pair sent simultaneous offers and one direction of
+  // audio silently died. This makes the outcome deterministic
+  // instead of a race.
+  function isPolite(otherSeat) {
+    return mySeat > otherSeat;
+  }
+
   function ensurePeer(seat) {
     if (peers[seat]) return peers[seat];
+
     const pc = new RTCPeerConnection(rtcConfig);
+    makingOffer[seat] = false;
+    pendingCandidates[seat] = [];
+
     if (localStream) {
       localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
     }
+
     pc.onicecandidate = (e) => {
       if (e.candidate) send({ type: "voice_signal", to: seat, data: { candidate: e.candidate } });
     };
-    
+
     pc.ontrack = (e) => {
       let audio = audios[seat];
       if (!audio) {
@@ -2864,34 +3172,91 @@ const Voice = (() => {
       }
       audio.srcObject = e.streams[0];
     };
+
+    // Fires automatically whenever a track is added to this peer --
+    // whether that's right now (brand-new peer, mic already on) or
+    // later (mic turned on after the peer already existed because
+    // someone else called us first). Either way an offer goes out,
+    // so audio in both directions always ends up wired correctly
+    // regardless of who enabled their mic first.
+    pc.onnegotiationneeded = async () => {
+      try {
+        makingOffer[seat] = true;
+        await pc.setLocalDescription();
+        send({ type: "voice_signal", to: seat, data: { sdp: pc.localDescription } });
+      } catch (e) {
+        /* ignore -- a retry will happen on the next negotiation */
+      } finally {
+        makingOffer[seat] = false;
+      }
+    };
+
     peers[seat] = pc;
     return pc;
-  }
-
-  async function callSeat(seat) {
-    const pc = ensurePeer(seat);
-    try {
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      send({ type: "voice_signal", to: seat, data: { sdp: offer } });
-    } catch (e) { /* peer may not be reachable yet -- ignore */ }
   }
 
   async function handleSignal(fromSeat, data) {
     if (fromSeat === null || fromSeat === undefined) return;
     const pc = ensurePeer(fromSeat);
+    const polite = isPolite(fromSeat);
+
     try {
       if (data.sdp) {
-        await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+        const offerCollision =
+          data.sdp.type === "offer" &&
+          (makingOffer[fromSeat] || pc.signalingState !== "stable");
+
+        if (offerCollision && !polite) {
+          // We're impolite and mid-offer ourselves -- ignore theirs,
+          // ours will win. (No throw, no dropped call: they'll
+          // accept our offer instead.)
+          return;
+        }
+
+        await pc.setRemoteDescription(data.sdp);
+
+        const queued = pendingCandidates[fromSeat] || [];
+        pendingCandidates[fromSeat] = [];
+        for (const c of queued) {
+          try { await pc.addIceCandidate(c); } catch (e) { /* ignore */ }
+        }
+
         if (data.sdp.type === "offer") {
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          send({ type: "voice_signal", to: fromSeat, data: { sdp: answer } });
+          await pc.setLocalDescription();
+          send({ type: "voice_signal", to: fromSeat, data: { sdp: pc.localDescription } });
         }
       } else if (data.candidate) {
-        await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+        if (pc.remoteDescription && pc.remoteDescription.type) {
+          try { await pc.addIceCandidate(data.candidate); } catch (e) { /* ignore */ }
+        } else {
+          // Remote description isn't set yet -- hold onto this
+          // candidate and add it once it is, instead of letting
+          // addIceCandidate throw.
+          pendingCandidates[fromSeat] = pendingCandidates[fromSeat] || [];
+          pendingCandidates[fromSeat].push(data.candidate);
+        }
       }
     } catch (e) { /* ignore malformed/late signals */ }
+  }
+
+  function addLocalTrackToAllPeers() {
+    for (const seat of Object.keys(peers)) {
+      const pc = peers[seat];
+      const already = new Set(
+        pc.getSenders().map((s) => s.track && s.track.id).filter(Boolean)
+      );
+      localStream.getTracks().forEach((t) => {
+        if (!already.has(t.id)) pc.addTrack(t, localStream);
+      });
+    }
+  }
+
+  function showVoiceError(text) {
+    // A non-blocking banner instead of alert() -- alert() freezes
+    // the whole tab's JS (including game timers and the WebSocket
+    // message handler) until dismissed, which is what made a failed
+    // mic permission look like the game had crashed.
+    showRoundBanner(text);
   }
 
   async function enable() {
@@ -2899,14 +3264,20 @@ const Voice = (() => {
     try {
       localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (e) {
-      alert("Couldn't access your microphone. Check your browser/OS permissions.");
+      showVoiceError("Couldn't access your microphone. Check permissions, and that this page is loaded over HTTPS (or localhost).");
       return false;
     }
     enabled = true;
     muted = false;
+
+    // Make sure a peer connection exists for every other seat, then
+    // attach our track to all of them. addTrack triggers
+    // onnegotiationneeded automatically -- covers both a brand-new
+    // peer and one that already existed from an incoming call.
     for (let seat = 0; seat < 4; seat++) {
-      if (seat !== mySeat) callSeat(seat);
+      if (seat !== mySeat) ensurePeer(seat);
     }
+    addLocalTrackToAllPeers();
     return true;
   }
 
@@ -2916,6 +3287,8 @@ const Voice = (() => {
     localStream = null;
     Object.values(peers).forEach((pc) => { try { pc.close(); } catch (e) {} });
     for (const k of Object.keys(peers)) delete peers[k];
+    for (const k of Object.keys(makingOffer)) delete makingOffer[k];
+    for (const k of Object.keys(pendingCandidates)) delete pendingCandidates[k];
     Object.values(audios).forEach((a) => a.remove());
     for (const k of Object.keys(audios)) delete audios[k];
   }
@@ -3219,6 +3592,616 @@ function onOnlineCardClick(card) {
   SoundEngine.cardClick();
   send({ type: "play_card", rank: card.rank, suit: card.suit });
 }
+
+
+// ============================================================
+// SPADES -- second game, self-contained. Reuses generic pieces
+// already defined above (Deck, Rules, Bot, sortHand, SUIT_SYMBOL,
+// createCardFace, positionAbs, getSeatPos/getPlayPos, SoundEngine,
+// markInGame, CARD_BACK_IMAGE, BOT_THINK_MS/TRICK_FLY_MS/
+// TRICK_HOLD_MS) but none of Court Piece's game state or DOM
+// elements -- nothing here can affect Court Piece.
+// ============================================================
+
+const SPADES_TARGET_SCORE = 200;
+
+const spadesGameSelectOverlay = document.getElementById("game-select-overlay");
+const selectSpadesBtn = document.getElementById("select-spades");
+const selectCourtPieceBtn = document.getElementById("select-court-piece");
+const menuBackToGamesBtn = document.getElementById("menu-back-to-games");
+
+const spadesMenuOverlay = document.getElementById("spades-menu-overlay");
+const spadesPlayIndividualBtn = document.getElementById("spades-play-individual");
+const spadesPlayTeamBtn = document.getElementById("spades-play-team");
+const spadesHowToPlayBtn = document.getElementById("spades-how-to-play");
+const spadesHowToPlayOverlay = document.getElementById("spades-how-to-play-overlay");
+const spadesHowToPlayCloseBtn = document.getElementById("spades-how-to-play-close");
+const spadesBackToGamesBtn = document.getElementById("spades-back-to-games");
+
+const spadesStageWrap = document.getElementById("spades-stage-wrap");
+const spadesStage = document.getElementById("spades-stage");
+const spadesIntroOverlay = document.getElementById("spades-intro-overlay");
+const spadesIntroText = document.getElementById("spades-intro-text");
+const spadesIntroButton = document.getElementById("spades-intro-button");
+
+const spadesSeatEls = {
+  1: document.getElementById("spades-seat-1"),
+  2: document.getElementById("spades-seat-2"),
+  3: document.getElementById("spades-seat-3")
+};
+const spadesHandEl = document.getElementById("spades-hand");
+const spadesTableCardsEl = document.getElementById("spades-table-cards");
+
+const spadesRoundPanelText = document.getElementById("spades-round-panel-text");
+const spadesStatusPanelText = document.getElementById("spades-status-panel-text");
+const spadesScorePanelLabel = document.getElementById("spades-score-panel-label");
+const spadesScorePanelText = document.getElementById("spades-score-panel-text");
+
+const spadesBidOverlay = document.getElementById("spades-bid-overlay");
+const spadesBidSelect = document.getElementById("spades-bid-select");
+const spadesBidNilBtn = document.getElementById("spades-bid-nil");
+const spadesBidConfirmBtn = document.getElementById("spades-bid-confirm");
+
+const spadesRoundBannerEl = document.getElementById("spades-round-banner");
+const spadesFollowSuitToastEl = document.getElementById("spades-follow-suit-toast");
+
+const spadesSummaryModal = document.getElementById("spades-round-summary-modal");
+const spadesSummaryTitle = document.getElementById("spades-summary-title");
+const spadesSummaryBody = document.getElementById("spades-summary-body");
+const spadesSummaryContinueBtn = document.getElementById("spades-summary-continue");
+
+const spadesMatchOverModal = document.getElementById("spades-match-over-modal");
+const spadesMatchOverTitle = document.getElementById("spades-match-over-title");
+const spadesMatchOverSub = document.getElementById("spades-match-over-sub");
+const spadesMatchOverPlayAgainBtn = document.getElementById("spades-match-over-play-again");
+const spadesMatchOverMenuBtn = document.getElementById("spades-match-over-menu");
+
+// ---------------- Navigation between the two games ----------------
+
+selectSpadesBtn.addEventListener("click", () => {
+  spadesGameSelectOverlay.classList.remove("visible");
+  spadesMenuOverlay.classList.add("visible");
+});
+
+selectCourtPieceBtn.addEventListener("click", () => {
+  spadesGameSelectOverlay.classList.remove("visible");
+  menuOverlay.classList.add("visible");
+});
+
+menuBackToGamesBtn.addEventListener("click", () => {
+  menuOverlay.classList.remove("visible");
+  spadesGameSelectOverlay.classList.add("visible");
+});
+
+spadesBackToGamesBtn.addEventListener("click", () => {
+  spadesMenuOverlay.classList.remove("visible");
+  spadesGameSelectOverlay.classList.add("visible");
+});
+
+spadesHowToPlayBtn.addEventListener("click", () => {
+  spadesHowToPlayOverlay.classList.add("visible");
+});
+spadesHowToPlayCloseBtn.addEventListener("click", () => {
+  spadesHowToPlayOverlay.classList.remove("visible");
+});
+
+spadesPlayIndividualBtn.addEventListener("click", () => {
+  spadesMenuOverlay.classList.remove("visible");
+  startSpadesIntro("individual");
+});
+spadesPlayTeamBtn.addEventListener("click", () => {
+  spadesMenuOverlay.classList.remove("visible");
+  startSpadesIntro("team");
+});
+
+// ---------------- Game state ----------------
+
+function makeSpadesPlayer(name) {
+  return { name, hand: [], bid: null, isNil: false, tricksWon: 0, isHuman: false };
+}
+
+const spadesGame = {
+  mode: "team",
+  players: [
+    makeSpadesPlayer("Player 1"), makeSpadesPlayer("Player 2"),
+    makeSpadesPlayer("Player 3"), makeSpadesPlayer("Player 4")
+  ],
+  dealer: 3,
+  roundNumber: 1,
+  spadesBroken: false,
+  team1Score: 0, team2Score: 0, team1Bags: 0, team2Bags: 0,
+  individualScores: [0, 0, 0, 0], individualBags: [0, 0, 0, 0]
+};
+spadesGame.players[0].isHuman = true;
+
+let spadesTurnPlayer = 0;
+let spadesCurrentTrick = []; // [{ playerIndex, card, el }]
+let spadesAcceptingHumanClick = false;
+let spadesBiddingQueue = [];
+
+function spadesTeamOf(idx) { return idx % 2 === 0 ? 1 : 2; }
+
+function spadesResetRound() {
+  spadesGame.spadesBroken = false;
+  spadesCurrentTrick = [];
+  for (const p of spadesGame.players) {
+    p.hand = [];
+    p.bid = null;
+    p.isNil = false;
+    p.tricksWon = 0;
+  }
+}
+
+// ---------------- Intro / start ----------------
+
+function startSpadesIntro(mode) {
+  markInGame();
+  currentMode = "spades";
+  spadesGame.mode = mode;
+  spadesGame.roundNumber = 1;
+  spadesGame.dealer = 3;
+  spadesGame.team1Score = 0; spadesGame.team2Score = 0;
+  spadesGame.team1Bags = 0; spadesGame.team2Bags = 0;
+  spadesGame.individualScores = [0, 0, 0, 0];
+  spadesGame.individualBags = [0, 0, 0, 0];
+
+  spadesScorePanelLabel.textContent = mode === "team" ? "Match Score" : "Scores";
+  micToggleBtn.style.display = "none";
+  if (typeof Voice !== "undefined" && Voice.isEnabled()) Voice.disable();
+
+  spadesStageWrap.style.display = "flex";
+  spadesIntroOverlay.classList.add("visible");
+  spadesIntroText.textContent = mode === "team"
+    ? "You + Player 3 vs Player 2 + Player 4"
+    : "Every player for themselves";
+  spadesIntroButton.onclick = () => {
+    spadesIntroOverlay.classList.remove("visible");
+    spadesStartRound();
+  };
+  fitSpadesStage();
+}
+
+// ---------------- Round flow ----------------
+
+function spadesStartRound() {
+  spadesResetRound();
+
+  const deck = new Deck();
+  deck.shuffle();
+  for (let round = 0; round < 13; round++) {
+    for (let i = 0; i < 4; i++) {
+      const p = spadesGame.players[(spadesGame.dealer + 1 + i) % 4];
+      const card = deck.dealCard();
+      if (card) p.hand.push(card);
+    }
+  }
+  for (const p of spadesGame.players) sortHand(p);
+
+  renderSpadesHUD();
+  renderSpadesSeats();
+  renderSpadesHand();
+
+  // Bidding order: player left of the dealer bids first, clockwise.
+  spadesBiddingQueue = [0, 1, 2, 3].map((i) => (spadesGame.dealer + 1 + i) % 4);
+  spadesRunNextBid();
+}
+
+function spadesBotBid(player) {
+  // Simple heuristic: spades and high honor cards count as likely
+  // tricks. Good enough for a casual bot opponent.
+  let est = 0;
+  for (const c of player.hand) {
+    if (c.suit === "Spades") est += (c.rank === "Ace" || c.rank === "King") ? 1 : 0.6;
+    else if (c.rank === "Ace") est += 0.9;
+    else if (c.rank === "King") est += 0.5;
+  }
+  return Math.max(1, Math.min(10, Math.round(est)));
+}
+
+function spadesRunNextBid() {
+  if (spadesBiddingQueue.length === 0) {
+    spadesBeginTrickPlay();
+    return;
+  }
+  const idx = spadesBiddingQueue.shift();
+  const player = spadesGame.players[idx];
+
+  if (player.isHuman) {
+    showSpadesBidOverlay(idx);
+  } else {
+    setTimeout(() => {
+      spadesApplyBid(idx, spadesBotBid(player));
+      spadesRunNextBid();
+    }, BOT_THINK_MS);
+  }
+}
+
+function showSpadesBidOverlay(idx) {
+  spadesBidSelect.innerHTML = "";
+  for (let n = 1; n <= 13; n++) {
+    const opt = document.createElement("option");
+    opt.value = n;
+    opt.textContent = n;
+    spadesBidSelect.appendChild(opt);
+  }
+  spadesBidOverlay.classList.add("visible");
+
+  spadesBidNilBtn.onclick = () => {
+    spadesBidOverlay.classList.remove("visible");
+    spadesApplyBid(idx, 0);
+    spadesRunNextBid();
+  };
+  spadesBidConfirmBtn.onclick = () => {
+    spadesBidOverlay.classList.remove("visible");
+    spadesApplyBid(idx, parseInt(spadesBidSelect.value, 10));
+    spadesRunNextBid();
+  };
+}
+
+function spadesApplyBid(idx, bid) {
+  const player = spadesGame.players[idx];
+  player.bid = bid;
+  player.isNil = bid === 0;
+  renderSpadesSeats();
+  showSpadesBanner(`${player.name} bids ${bid === 0 ? "Nil" : bid}`);
+}
+
+// ---------------- Trick play ----------------
+
+function spadesBeginTrickPlay() {
+  spadesTurnPlayer = (spadesGame.dealer + 1) % 4;
+  spadesAdvanceTurn();
+}
+
+function spadesLeadSuit() {
+  return spadesCurrentTrick.length === 0 ? null : spadesCurrentTrick[0].card.suit;
+}
+
+function spadesLegalCards(hand, leadSuit, spadesBroken) {
+  if (leadSuit === null) {
+    // Leading: spades are off-limits until broken, unless spades are
+    // literally all the player has left.
+    if (!spadesBroken) {
+      const nonSpades = hand.filter((c) => c.suit !== "Spades");
+      if (nonSpades.length > 0) return nonSpades;
+    }
+    return hand;
+  }
+  const followers = hand.filter((c) => c.suit === leadSuit);
+  return followers.length > 0 ? followers : hand;
+}
+
+function spadesAdvanceTurn() {
+  renderSpadesSeats();
+  const player = spadesGame.players[spadesTurnPlayer];
+  if (player.isHuman) {
+    spadesAcceptingHumanClick = true;
+  } else {
+    spadesAcceptingHumanClick = false;
+    setTimeout(spadesBotPlay, BOT_THINK_MS);
+  }
+}
+
+function spadesIsValidHumanCard(card) {
+  const legal = spadesLegalCards(spadesGame.players[0].hand, spadesLeadSuit(), spadesGame.spadesBroken);
+  return legal.some((c) => c.rank === card.rank && c.suit === card.suit);
+}
+
+function onSpadesHumanCardClick(card, el) {
+  if (!spadesAcceptingHumanClick || spadesTurnPlayer !== 0) return;
+  if (!spadesIsValidHumanCard(card)) {
+    showSpadesFollowSuitToast();
+    return;
+  }
+  SoundEngine.cardClick();
+  spadesAcceptingHumanClick = false;
+
+  const hand = spadesGame.players[0].hand;
+  const idx = hand.findIndex((c) => c.rank === card.rank && c.suit === card.suit);
+  hand.splice(idx, 1);
+  renderSpadesHand();
+
+  spadesPlayCardToTable(0, card, el, true);
+}
+
+function spadesBotPlay() {
+  const idx = spadesTurnPlayer;
+  const player = spadesGame.players[idx];
+  const leadSuit = spadesLeadSuit();
+  const legalHand = spadesLegalCards(player.hand, leadSuit, spadesGame.spadesBroken);
+  const playedPairs = spadesCurrentTrick.map((e) => [e.playerIndex, e.card]);
+
+  const card = Bot.chooseCard(idx, legalHand, leadSuit, playedPairs, "Spades");
+  if (!card) return;
+
+  const cardIdx = player.hand.findIndex((c) => c.rank === card.rank && c.suit === card.suit);
+  player.hand.splice(cardIdx, 1);
+  renderSpadesSeats();
+
+  const el = createCardFace(card);
+  el.classList.add("table-card");
+  const pos = getPlayPos()[idx];
+  positionAbs(el, pos.x, pos.y);
+  spadesTableCardsEl.appendChild(el);
+
+  spadesPlayCardToTable(idx, card, el, false);
+}
+
+function spadesPlayCardToTable(playerIndex, card, el, isHumanOrigin) {
+  if (card.suit === "Spades") spadesGame.spadesBroken = true;
+
+  if (isHumanOrigin) {
+    el.classList.add("table-card");
+    spadesTableCardsEl.appendChild(el);
+    const pos = getPlayPos()[0];
+    el.getBoundingClientRect();
+    positionAbs(el, pos.x, pos.y);
+  }
+
+  spadesCurrentTrick.push({ playerIndex, card, el });
+  renderSpadesHUD();
+
+  spadesTurnPlayer = (playerIndex + 1) % 4;
+
+  if (spadesCurrentTrick.length === 4) {
+    setTimeout(spadesFinishTrick, TRICK_HOLD_MS);
+  } else {
+    spadesAdvanceTurn();
+  }
+}
+
+function spadesFinishTrick() {
+  const playedPairs = spadesCurrentTrick.map((e) => [e.playerIndex, e.card]);
+  const winnerIndex = Rules.determineWinner(playedPairs, "Spades");
+
+  const target = getSeatPos()[winnerIndex];
+  for (const entry of spadesCurrentTrick) {
+    entry.el.style.transition = `left ${TRICK_FLY_MS}ms ease-in, top ${TRICK_FLY_MS}ms ease-in`;
+    positionAbs(entry.el, target.x, target.y);
+  }
+
+  setTimeout(() => {
+    spadesGame.players[winnerIndex].tricksWon += 1;
+    SoundEngine.trickCapture();
+    renderSpadesSeats();
+    renderSpadesHUD();
+
+    setTimeout(() => {
+      spadesTableCardsEl.innerHTML = "";
+      spadesCurrentTrick = [];
+
+      const allPlayed = spadesGame.players.every((p) => p.hand.length === 0);
+      if (allPlayed) {
+        spadesResolveRoundEnd();
+        return;
+      }
+
+      spadesTurnPlayer = winnerIndex;
+      spadesAdvanceTurn();
+    }, 300);
+  }, TRICK_FLY_MS);
+}
+
+// ---------------- Scoring ----------------
+
+function spadesScorePlayer(player) {
+  if (player.isNil) {
+    return player.tricksWon === 0
+      ? { points: 100, bags: 0 }
+      : { points: -100, bags: player.tricksWon };
+  }
+  if (player.tricksWon >= player.bid) {
+    return { points: player.bid * 10 + (player.tricksWon - player.bid), bags: player.tricksWon - player.bid };
+  }
+  return { points: -player.bid * 10, bags: 0 };
+}
+
+function spadesApplyBags(currentBags, newBags) {
+  let total = currentBags + newBags;
+  let penalty = 0;
+  while (total >= 10) {
+    penalty += 100;
+    total -= 10;
+  }
+  return { penalty, total };
+}
+
+function spadesResolveRoundEnd() {
+  const lines = [];
+
+  if (spadesGame.mode === "individual") {
+    for (let i = 0; i < 4; i++) {
+      const p = spadesGame.players[i];
+      const { points, bags } = spadesScorePlayer(p);
+      const { penalty, total } = spadesApplyBags(spadesGame.individualBags[i], bags);
+      spadesGame.individualBags[i] = total;
+      const net = points - penalty;
+      spadesGame.individualScores[i] += net;
+      lines.push(`${p.name}: bid ${p.isNil ? "Nil" : p.bid}, won ${p.tricksWon} &rarr; ${net >= 0 ? "+" : ""}${net}`);
+    }
+  } else {
+    for (const team of [1, 2]) {
+      const seats = team === 1 ? [0, 2] : [1, 3];
+      const players = seats.map((i) => spadesGame.players[i]);
+
+      let teamPoints = 0;
+      let contract = 0;
+
+      for (const p of players) {
+        if (p.isNil) {
+          teamPoints += spadesScorePlayer(p).points;
+        } else {
+          contract += p.bid;
+        }
+      }
+
+      const nonNilTricks = players.filter((p) => !p.isNil).reduce((sum, p) => sum + p.tricksWon, 0);
+      let teamBags = 0;
+
+      if (contract > 0) {
+        if (nonNilTricks >= contract) {
+          teamPoints += contract * 10 + (nonNilTricks - contract);
+          teamBags += nonNilTricks - contract;
+        } else {
+          teamPoints -= contract * 10;
+        }
+      }
+
+      const bagRef = team === 1 ? spadesGame.team1Bags : spadesGame.team2Bags;
+      const { penalty, total } = spadesApplyBags(bagRef, teamBags);
+      teamPoints -= penalty;
+
+      if (team === 1) { spadesGame.team1Bags = total; spadesGame.team1Score += teamPoints; }
+      else { spadesGame.team2Bags = total; spadesGame.team2Score += teamPoints; }
+
+      const namesLine = players.map((p) => `${p.name} (bid ${p.isNil ? "Nil" : p.bid}, won ${p.tricksWon})`).join(", ");
+      lines.push(`Team ${team} -- ${namesLine} &rarr; ${teamPoints >= 0 ? "+" : ""}${teamPoints}`);
+    }
+  }
+
+  spadesSummaryTitle.textContent = `Round ${spadesGame.roundNumber} Results`;
+  spadesSummaryBody.innerHTML = lines.map((l) => `<p style="margin:4px 0;">${l}</p>`).join("");
+  spadesSummaryModal.classList.add("visible");
+  renderSpadesHUD();
+
+  const matchOver = spadesGame.mode === "team"
+    ? (spadesGame.team1Score >= SPADES_TARGET_SCORE || spadesGame.team2Score >= SPADES_TARGET_SCORE)
+    : spadesGame.individualScores.some((s) => s >= SPADES_TARGET_SCORE);
+
+  spadesSummaryContinueBtn.onclick = () => {
+    spadesSummaryModal.classList.remove("visible");
+    if (matchOver) {
+      spadesShowMatchOver();
+    } else {
+      spadesGame.dealer = (spadesGame.dealer + 1) % 4;
+      spadesGame.roundNumber += 1;
+      spadesStartRound();
+    }
+  };
+}
+
+function spadesShowMatchOver() {
+  let title, sub;
+  if (spadesGame.mode === "team") {
+    const winner = spadesGame.team1Score >= spadesGame.team2Score ? 1 : 2;
+    title = `🏆 Team ${winner} Wins!`;
+    sub = `Final score: ${spadesGame.team1Score} - ${spadesGame.team2Score}`;
+  } else {
+    let best = 0;
+    for (let i = 1; i < 4; i++) {
+      if (spadesGame.individualScores[i] > spadesGame.individualScores[best]) best = i;
+    }
+    title = `🏆 ${spadesGame.players[best].name} Wins!`;
+    sub = spadesGame.individualScores.map((s, i) => `${spadesGame.players[i].name}: ${s}`).join(" · ");
+  }
+  SoundEngine.matchWin();
+  spadesMatchOverTitle.textContent = title;
+  spadesMatchOverSub.textContent = sub;
+  spadesMatchOverModal.classList.add("visible");
+}
+
+spadesMatchOverPlayAgainBtn.addEventListener("click", () => {
+  spadesMatchOverModal.classList.remove("visible");
+  startSpadesIntro(spadesGame.mode);
+});
+spadesMatchOverMenuBtn.addEventListener("click", () => {
+  window.location.reload();
+});
+
+// ---------------- Rendering ----------------
+
+function renderSpadesHand() {
+  spadesHandEl.innerHTML = "";
+  const hand = spadesGame.players[0].hand;
+
+  const mobile = isMobile();
+  const stageWidth = mobile ? window.innerWidth : 1000;
+  const cardW = mobile ? 82 : 84;
+
+  let gap, startX;
+  if (mobile) {
+    const leftMargin = 10, rightMargin = 6, maxGap = 26;
+    const available = stageWidth - cardW - leftMargin - rightMargin;
+    gap = Math.min(maxGap, available / Math.max(hand.length - 1, 1));
+    startX = leftMargin;
+  } else {
+    gap = Math.min(58, (stageWidth - 140) / Math.max(hand.length - 1, 1));
+    const totalWidth = (hand.length - 1) * gap + cardW;
+    startX = (stageWidth - totalWidth) / 2;
+  }
+  const baseY = mobile ? window.innerHeight - 138 : 575;
+
+  hand.forEach((card, i) => {
+    const el = createCardFace(card);
+    el.classList.add("hand-card");
+    const center = (hand.length - 1) / 2;
+    const curve = Math.abs(i - center);
+    positionAbs(el, startX + i * gap, baseY + curve * 2);
+    el.style.zIndex = i;
+    el.addEventListener("click", () => onSpadesHumanCardClick(card, el));
+    spadesHandEl.appendChild(el);
+  });
+}
+
+function renderSpadesSeats() {
+  for (const idx of [1, 2, 3]) {
+    const seatEl = spadesSeatEls[idx];
+    const player = spadesGame.players[idx];
+    const stackEl = seatEl.querySelector(".hidden-stack");
+    stackEl.innerHTML = "";
+
+    const count = Math.min(player.hand.length, 6);
+    for (let i = 0; i < count; i++) {
+      const back = document.createElement("img");
+      back.className = "card card-back";
+      back.src = encodeURI(CARD_BACK_IMAGE);
+      back.alt = "Hidden card";
+      back.draggable = false;
+      back.style.left = `${i * 3}px`;
+      back.style.top = `${i}px`;
+      stackEl.appendChild(back);
+    }
+
+    const isTeammate = spadesGame.mode === "team" && spadesTeamOf(idx) === spadesTeamOf(0);
+    const role = isTeammate ? "<span class=\"role-icon\">🤝</span> Teammate" : "Opponent";
+    const bidText = player.bid === null
+      ? ""
+      : `<span class="spades-bid-label">Bid ${player.isNil ? "Nil" : player.bid} &middot; Won ${player.tricksWon}</span>`;
+
+    seatEl.querySelector(".seat-name").innerHTML =
+      `${role}<br><span class="player-real-name">${player.name}</span>${bidText}`;
+    seatEl.classList.toggle("active-turn", spadesTurnPlayer === idx);
+  }
+}
+
+function renderSpadesHUD() {
+  spadesRoundPanelText.textContent = `Round ${spadesGame.roundNumber}`;
+  spadesStatusPanelText.textContent = spadesGame.spadesBroken ? "Broken" : "Not Broken";
+
+  if (spadesGame.mode === "team") {
+    spadesScorePanelText.textContent = `${spadesGame.team1Score} - ${spadesGame.team2Score}`;
+  } else {
+    spadesScorePanelText.textContent = spadesGame.individualScores.join(" / ");
+  }
+}
+
+function showSpadesBanner(text) {
+  spadesRoundBannerEl.textContent = text;
+  spadesRoundBannerEl.classList.add("visible");
+  setTimeout(() => spadesRoundBannerEl.classList.remove("visible"), 1800);
+}
+
+function showSpadesFollowSuitToast() {
+  spadesFollowSuitToastEl.classList.add("visible");
+  setTimeout(() => spadesFollowSuitToastEl.classList.remove("visible"), 1200);
+}
+
+function fitSpadesStage() {
+  if (isMobile()) return;
+  const scale = Math.min(window.innerWidth / 1000, window.innerHeight / 700);
+  spadesStage.style.transform = `translate(-50%, -50%) scale(${scale})`;
+}
+window.addEventListener("resize", fitSpadesStage);
 
 </script>
 </body>
