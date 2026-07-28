@@ -180,8 +180,8 @@
 
       #targetTab {
 
-          top: 75px;
-          right: 01px;
+          top: 29px;
+          right: 165px;
 
           font-size: 11px;
           padding: 2px 2px;
@@ -563,8 +563,8 @@
   }
   @media (max-width: 700px) {
   #mic-toggle-btn {
-    top: 58px;        /* about 1 cm lower */
-    left: 5px;
+    top: 115px;        /* about 1 cm lower */
+    left: 05px;
     font-size: 10px;  /* smaller text */
     padding: 2px 5px; /* roughly half the size */
   }
@@ -835,27 +835,31 @@
       font-size: 17px;
     }
 
-    #round-panel   { left: 2vw;  width: 26vw; }
-    #tally-panel   { left: 50%; transform: translateX(-50%); width: 34vw; }
-    #score-panel   { right: 2vw; left: auto; width: 26vw; }
+    #round-panel   { left: 1vw;  width: 20vw; }
+    #tally-panel   { left: 11%; transform: translateX(-50%); width: 20vw; top: 54px;}
+    #score-panel   { right: 1vw; left: auto; width: 20vw; }
 
     /* Short label for the middle panel so it never wraps/widens */
     .label-full { display: none; }
     .label-short { display: inline; }
 
     #trump-panel-holder {
-      left: 50% !important;
-      top: 52px !important;
-      transform: translateX(-50%) !important;
+      right: 41vw !important;
+      left: auto !important;
+
+      top: 9px !important;
+
+      transform: none !important;
+
       font-size: 12px !important;
     }
 
     /* ---- Seats ---- */
     .seat { width: 90px; height: 110px; }
 
-    #seat-1 { left: 13vw; top: 46vh; }
-    #seat-2 { left: 50vw; top: 17vh; }
-    #seat-3 { left: 87vw; top: 46vh; }
+    #seat-1 { left: 09vw; top: 46vh; }
+    #seat-2 { left: 46vw; top: 16vh; }
+    #seat-3 { left: 91vw; top: 46vh; }
 
     .seat-name {
       font-size: 15px;
@@ -945,8 +949,8 @@
     /* Menu button removed -- back-button/exit confirmation (in JS)
        handles returning to the menu instead. */
     #mic-toggle-btn {
-      font-size: 15px;
-      padding: 10px 16px;
+      font-size: 13px;
+      padding: 1px 5px;
     }
 
     /* ---- Intro overlay ---- */
@@ -1009,12 +1013,12 @@
     }
 
     #spades-round-panel   { left: 2vw;  width: 26vw; top: 6px; }
-    #spades-status-panel  { left: 50%; transform: translateX(-50%); width: 34vw; top: 6px; }
+    #spades-status-panel  { left: 15%; transform: translateX(-50%); width: 27vw; top: 53px; }
     #spades-score-panel   { right: 2vw; left: auto; width: 26vw; top: 6px; }
 
-    #spades-seat-1 { left: 13vw; top: 46vh; width: 90px; height: 110px; }
-    #spades-seat-2 { left: 50vw; top: 17vh; width: 90px; height: 110px; }
-    #spades-seat-3 { left: 87vw; top: 46vh; width: 90px; height: 110px; }
+    #spades-seat-1 { left: 08vw; top: 46vh; width: 90px; height: 110px; }
+    #spades-seat-2 { left: 50vw; top: 07vh; width: 90px; height: 110px; }
+    #spades-seat-3 { left: 91vw; top: 46vh; width: 90px; height: 110px; }
 
     #spades-hand .card {
       width: 82px;
@@ -1118,7 +1122,7 @@
   </div>
 </div>
 
-<button id="mic-toggle-btn" title="Voice chat with your table">🎤 Enable Mic</button>
+<button id="mic-toggle-btn" title="Voice chat with your table">🎤 Mic</button>
 
 <!-- ============================================================
      SPADES -- own stage, own overlays. Shares CSS classes with
