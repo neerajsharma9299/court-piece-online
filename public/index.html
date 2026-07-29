@@ -181,7 +181,7 @@
       #targetTab {
 
           top: 29px;
-          right: 165px;
+          right: 140px;
 
           font-size: 11px;
           padding: 2px 2px;
@@ -209,7 +209,7 @@
       font-weight: 700;
       font-size: 18px;
       color: var(--cream);
-      margin-top: 5px;
+      margin-top: -5px;
       letter-spacing: 0.02em;
       text-align: center;
       line-height: 1.2;
@@ -897,8 +897,8 @@
 
     /* ---- Table (played) cards ---- */
     #table-cards .card {
-      width: 60px;
-      height: 84px;
+      width: 54px;
+      height: 80px;
     }
 
     /* ---- Pool markers / capture chips ---- */
@@ -1024,13 +1024,13 @@
       width: 82px;
       height: 114px;
       border-radius: 8px;
-      box-shadow: 0 6px 16px rgba(0,0,0,.55);
+      box-shadow: -1 6px 16px rgba(0,0,0,.55);
     }
     #spades-hand { position: absolute; inset: 0; pointer-events: auto; bottom: 0; }
 
     #spades-table-cards .card {
-      width: 60px;
-      height: 84px;
+      width: 54px;
+      height: 80px;
     }
 
     #spades-bid-overlay { top: 32vh; }
@@ -1898,9 +1898,9 @@ function getPlayPos() {
   if (!isMobile()) return PLAY_POS;
   const w = window.innerWidth, h = window.innerHeight;
   return {
-    0: { x: w * 0.5 - 50, y: h * 0.62 },
-    1: { x: w * 0.30, y: h * 0.40 },
-    2: { x: w * 0.5 - 50, y: h * 0.26 },
+    0: { x: w * 0.5 - 40, y: h * 0.50 },
+    1: { x: w * 0.20, y: h * 0.40 },
+    2: { x: w * 0.5 - 40, y: h * 0.32 },
     3: { x: w * 0.62, y: h * 0.40 }
   };
 }
