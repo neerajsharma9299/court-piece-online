@@ -57,6 +57,14 @@ function sendFriends(ws) {
 }
 function refreshOnlineFriends() { for (const ws of onlinePlayers.values()) sendFriends(ws); }
 
+function broadcastOnlineList() {
+  const db = loadUsers();
+  const players = Array.from(onlinePlayers.keys()).map(id => ({
+    id,
+    name: (db.users[id] || {}).name || "Player",
+  }));
+  for (const ws of onlinePlayers.values()) sendWs(ws, { type: "online_list", players });
+}
 function makeRoomCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code;
@@ -730,6 +738,7 @@ server.on("upgrade", (req, socket) => {
       onlinePlayers.set(id, ws);
       sendWs(ws, { type: "identity", playerId: id });
       refreshOnlineFriends();
+      broadcastOnlineList();
       return;
     }
 
@@ -757,7 +766,7 @@ server.on("upgrade", (req, socket) => {
     if (msg.type === "invite_friend") {
       const db = loadUsers(), me = db.users[ws.playerId];
       const targetId = String(msg.playerId || "").toUpperCase();
-      if (!me || !me.friends.includes(targetId) || !joinedRoom || seatIndex !== 0 || msg.code !== joinedRoom.code) return;
+      if (!me || !onlinePlayers.has(targetId) || !joinedRoom || seatIndex !== 0 || msg.code !== joinedRoom.code) return;
       sendWs(onlinePlayers.get(targetId), { type: "friend_invite", name: me.name, code: joinedRoom.code });
       return;
     }
@@ -784,6 +793,7 @@ server.on("upgrade", (req, socket) => {
     if (ws.playerId && onlinePlayers.get(ws.playerId) === ws) {
       onlinePlayers.delete(ws.playerId);
       refreshOnlineFriends();
+      broadcastOnlineList();
     }
     if (joinedRoom && seatIndex !== null) {
       joinedRoom.sockets[seatIndex] = null;
