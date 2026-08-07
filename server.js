@@ -612,6 +612,28 @@ function serveStatic(req, res) {
 
 const server = http.createServer((req, res) => {
 
+  // ---------- CORS ----------
+  // The Android app loads this page from a different origin
+  // (https://appassets.androidplatform.net) than this server
+  // (https://court-piece-online1.onrender.com), so /register and
+  // /login are cross-origin fetch() calls. WebSocket connections
+  // (used for everything else -- create/join room, gameplay) aren't
+  // subject to this same browser restriction, which is why Create
+  // Room already worked while login/register silently failed with a
+  // generic "couldn't reach the server" on the client. Without these
+  // headers the browser blocks the response before JS ever sees it.
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    // Preflight request the browser sends before the real POST -- no
+    // body needed, just the CORS headers above plus a 204.
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
   // ---------- REGISTER ----------
   if (req.method === "POST" && req.url === "/register") {
 

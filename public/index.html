@@ -2452,19 +2452,20 @@
 
     let gap, startX;
     if (mobile) {
-      // Left-biased fan: first card sits near the left edge (fully
-      // visible) and the fan overlaps toward the right instead of
-      // being centered and clipping cards off both edges.
+      // Centered fan; the cap keeps widening as the hand thins out
+      // toward the end of a round instead of staying packed tight.
       const leftMargin = 10;
       const rightMargin = 6;
-      const maxGap = 26;
+      const maxGap = 50;
       const available = stageWidth - cardW - leftMargin - rightMargin;
       gap = Math.min(maxGap, available / Math.max(hand.length - 1, 1));
       const totalWidth = (hand.length - 1) * gap + cardW;
       startX = Math.max(leftMargin, (stageWidth - totalWidth) / 2);
     } else {
-      // Better spacing for 13 cards
-      gap = Math.min(58, (stageWidth - 140) / Math.max(hand.length - 1, 1));
+      // Same widening behavior on desktop -- cap raised from 58 so a
+      // near-empty hand fans out clearly instead of staying at its
+      // 13-card spacing.
+      gap = Math.min(100, (stageWidth - 140) / Math.max(hand.length - 1, 1));
       const totalWidth = (hand.length - 1) * gap + cardW;
       startX = (stageWidth - totalWidth) / 2;
     }
@@ -3546,7 +3547,10 @@
   });
 
   function serverUrl() {
-    if (window.location.protocol === "file:") {
+    if (
+      window.location.protocol === "file:" ||
+      window.location.hostname === "appassets.androidplatform.net"
+    ) {
       return "wss://court-piece-online1.onrender.com";
     }
     const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -3556,7 +3560,10 @@
   // Same-server HTTP base for /register and /login -- mirrors
   // serverUrl() above but with http(s) instead of ws(s).
   function apiUrl(path) {
-    if (window.location.protocol === "file:") {
+    if (
+      window.location.protocol === "file:" ||
+      window.location.hostname === "appassets.androidplatform.net"
+    ) {
       return "https://court-piece-online1.onrender.com" + path;
     }
     return path;
@@ -4089,14 +4096,16 @@
 
     let gap, startX;
     if (mobile) {
+      // Centered fan; the cap keeps widening as the hand thins out.
       const leftMargin = 10;
       const rightMargin = 6;
-      const maxGap = 26;
+      const maxGap = 50;
       const available = stageWidth - cardW - leftMargin - rightMargin;
       gap = Math.min(maxGap, available / Math.max(hand.length - 1, 1));
-      startX = leftMargin;
+      const totalWidth = (hand.length - 1) * gap + cardW;
+      startX = Math.max(leftMargin, (stageWidth - totalWidth) / 2);
     } else {
-      gap = Math.min(46, (stageWidth - 60) / Math.max(hand.length, 1));
+      gap = Math.min(80, (stageWidth - 60) / Math.max(hand.length, 1));
       const totalWidth = (hand.length - 1) * gap + cardW;
       startX = stageWidth / 2 - totalWidth / 2;
     }
@@ -4872,12 +4881,14 @@
 
     let gap, startX;
     if (mobile) {
-      const leftMargin = 10, rightMargin = 6, maxGap = 26;
+      // Centered fan; the cap keeps widening as the hand thins out.
+      const leftMargin = 10, rightMargin = 6, maxGap = 50;
       const available = stageWidth - cardW - leftMargin - rightMargin;
       gap = Math.min(maxGap, available / Math.max(hand.length - 1, 1));
-      startX = leftMargin;
+      const totalWidth = (hand.length - 1) * gap + cardW;
+      startX = Math.max(leftMargin, (stageWidth - totalWidth) / 2);
     } else {
-      gap = Math.min(58, (stageWidth - 140) / Math.max(hand.length - 1, 1));
+      gap = Math.min(100, (stageWidth - 140) / Math.max(hand.length - 1, 1));
       const totalWidth = (hand.length - 1) * gap + cardW;
       startX = (stageWidth - totalWidth) / 2;
     }
