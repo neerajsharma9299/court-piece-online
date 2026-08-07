@@ -98,6 +98,41 @@
     #spades-seat-2 { left: 500px; top: 55px; }
     #spades-seat-3 { left: 930px; top: 345px; }
 
+    /* ---------- Faint target-score watermark, painted on the felt ---------- */
+    .table-watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 68px;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: rgba(224, 189, 106, 0.10);
+      pointer-events: none;
+      user-select: none;
+      white-space: nowrap;
+      z-index: 0;
+      text-align: center;
+    }
+
+    /* ---------- Match-score panel: names row, divider, score row ---------- */
+    .score-panel-roster {
+      font-size: 10px;
+      letter-spacing: 0.03em;
+      color: var(--cream);
+      opacity: 0.75;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .score-panel-divider {
+      border: none;
+      border-top: 1px solid rgba(201,162,75,0.4);
+      margin: 4px 0 2px;
+    }
+
     .spades-bid-label {
       display: block;
       margin-top: 3px;
@@ -105,6 +140,26 @@
       font-weight: 600;
       color: var(--brass-bright);
     }
+
+    /* ---------- Your own bid/won status, shown above your hand ---------- */
+    #spades-your-status {
+      position: absolute;
+      left: 50%;
+      bottom: 148px;
+      transform: translateX(-50%);
+      color: var(--brass-bright);
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 700;
+      text-align: center;
+      z-index: 15;
+      display: none;
+      background: rgba(10, 20, 14, 0.6);
+      padding: 4px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--brass);
+    }
+    #spades-your-status.visible { display: block; }
 
     .panel {
       position: absolute;
@@ -791,6 +846,54 @@
     .friend-list li { display: flex; gap: 8px; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.08); font-size: 13px; }
     .friend-list button { border: 1px solid var(--brass); border-radius: 6px; background: transparent; color: var(--cream); padding: 4px 7px; cursor: pointer; }
 
+    /* ---------- Friends tabs (My Friends / Online Now) ---------- */
+    .friend-tabs { display: flex; gap: 8px; margin-top: 6px; }
+    .friend-tab-btn {
+      flex: 1;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 9px 8px;
+      border-radius: 8px;
+      border: 1.5px solid var(--brass);
+      background: transparent;
+      color: var(--cream);
+      opacity: 0.65;
+      cursor: pointer;
+    }
+    .friend-tab-btn.active { background: var(--brass-dark); opacity: 1; }
+    .friend-tab-panel { display: none; }
+    .friend-tab-panel.active { display: block; }
+
+    /* ---------- Account: login / register ---------- */
+    .auth-mode-switch { display: flex; gap: 8px; margin-bottom: 16px; }
+    .auth-mode-btn {
+      flex: 1;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 9px 8px;
+      border-radius: 8px;
+      border: 1.5px solid var(--brass);
+      background: transparent;
+      color: var(--cream);
+      opacity: 0.65;
+      cursor: pointer;
+    }
+    .auth-mode-btn.active { background: var(--brass-dark); opacity: 1; }
+    .auth-hint { font-size: 12px; color: var(--cream); opacity: 0.65; margin: -8px 0 14px; }
+
+    /* ---------- Quick Match waiting box ---------- */
+    #quick-match-status {
+      display: none;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(201,162,75,0.35);
+      text-align: center;
+    }
+    #quick-match-status.visible { display: block; }
+    #quick-match-status p { margin: 0 0 12px; font-size: 14px; }
+
     /* ================================================================
        MOBILE RESPONSIVE OVERRIDES
        Same stage, same seat/card positions, same game rules -- only
@@ -1030,6 +1133,8 @@
         box-shadow: -1 6px 16px rgba(0,0,0,.55);
       }
       #spades-hand { position: absolute; inset: 0; pointer-events: auto; bottom: 0; }
+      #spades-your-status { bottom: 128px; font-size: 12px; padding: 3px 10px; }
+      #spades-target-watermark { font-size: 30px; letter-spacing: 3px; }
 
       #spades-table-cards .card {
         width: 54px;
@@ -1125,7 +1230,7 @@
   </div>
 </div>
 
-<button id="mic-toggle-btn" title="Voice chat with your table">🎤 Mic</button>
+<button id="mic-toggle-btn" title="You always hear the table -- this button only controls whether they hear you">🎤 Mic</button>
 
 <!-- ============================================================
      SPADES -- own stage, own overlays. Shares CSS classes with
@@ -1136,6 +1241,10 @@
      ============================================================ -->
 <div id="spades-stage-wrap" style="display:none;">
   <div id="spades-stage">
+
+    <!-- Faint target score painted on the felt, like a stadium logo --
+         behind every other element so it never blocks play. -->
+    <div id="spades-target-watermark" class="table-watermark"></div>
 
     <div id="spades-round-panel" class="panel">
       <p class="panel-label">Round</p>
@@ -1149,6 +1258,8 @@
 
     <div id="spades-score-panel" class="panel">
       <p class="panel-label" id="spades-score-panel-label">Match Score</p>
+      <p class="score-panel-roster" id="spades-score-panel-roster"></p>
+      <hr class="score-panel-divider">
       <p class="panel-value" id="spades-score-panel-text">0 - 0</p>
     </div>
 
@@ -1168,6 +1279,7 @@
 
     <div id="spades-table-cards"></div>
     <div id="spades-hand"></div>
+    <div id="spades-your-status"></div>
 
     <!-- Bidding -->
     <div id="spades-bid-overlay" class="overlay-panel">
@@ -1223,32 +1335,105 @@
 </div>
 
 <!-- Main menu -->
+<!-- Main Menu V2 -->
 <div id="menu-overlay" class="full-overlay">
-  <h1 class="menu-title">Court Piece</h1>
-  <p class="menu-subtitle">A trick-taking card game for four</p>
-  <button id="menu-play-bots" class="menu-btn primary">Play vs Bots</button>
-  <button id="menu-play-online" class="menu-btn primary">Play Online</button>
-  <button id="menu-friends" class="menu-btn">👥 Friends</button>
-  <button id="menu-account" class="menu-btn">🙍 Account</button>
-  <button id="menu-settings" class="menu-btn">⚙️ Settings</button>
-  <button id="menu-how-to-play" class="menu-btn">How to Play</button>
-  <button id="menu-back-to-games" class="menu-btn small" style="margin-top:14px;">← Choose a different game</button>
+
+  <h1 class="menu-title">🃏 COURT PIECE</h1>
+
+  <p class="menu-subtitle">
+      Choose how you want to play
+  </p>
+
+  <button id="menu-play-online" class="menu-btn primary">
+      🌐 Play Online
+  </button>
+
+  <button id="menu-play-bots" class="menu-btn primary">
+      🤖 Play With Bots
+  </button>
+
+  <button id="menu-statistics" class="menu-btn">
+      📊 Statistics
+  </button>
+
+  <button id="menu-friends" class="menu-btn">
+      👥 Friends
+  </button>
+
+  <button id="menu-account" class="menu-btn">
+      👤 Profile
+  </button>
+
+  <button id="menu-settings" class="menu-btn">
+      ⚙ Settings
+  </button>
+
+  <button id="menu-how-to-play" class="menu-btn">
+      📖 How To Play
+  </button>
+
+  <button
+      id="menu-back-to-games"
+      class="menu-btn small"
+      style="margin-top:20px">
+      ← Back
+  </button>
+
 </div>
 
 <!-- Account -->
 <div id="account-overlay" class="full-overlay">
   <div class="lobby-panel">
     <h2>Account</h2>
-    <div class="lobby-field">
-      <label for="account-name-input">Your display name</label>
-      <input id="account-name-input" type="text" maxlength="20" placeholder="Player">
+
+    <!-- Logged out: login / register -->
+    <div id="auth-logged-out-box">
+      <div class="auth-mode-switch">
+        <button id="auth-tab-login" class="auth-mode-btn active" type="button">Log In</button>
+        <button id="auth-tab-register" class="auth-mode-btn" type="button">Register</button>
+      </div>
+      <p class="auth-hint">Just a username and password -- no phone or email needed.</p>
+
+      <div id="auth-form-login" class="auth-form">
+        <div class="lobby-field">
+          <label for="login-username-input">Username</label>
+          <input id="login-username-input" type="text" maxlength="20" placeholder="At least 6 characters" autocomplete="username">
+        </div>
+        <div class="lobby-field">
+          <label for="login-password-input">Password</label>
+          <input id="login-password-input" type="password" maxlength="64" placeholder="At least 6 characters" autocomplete="current-password">
+        </div>
+        <button id="login-submit-btn" class="menu-btn primary" style="width:100%;">Log In</button>
+      </div>
+
+      <div id="auth-form-register" class="auth-form" style="display:none;">
+        <div class="lobby-field">
+          <label for="register-username-input">Choose a username</label>
+          <input id="register-username-input" type="text" maxlength="20" placeholder="At least 6 characters" autocomplete="username">
+        </div>
+        <div class="lobby-field">
+          <label for="register-password-input">Choose a password</label>
+          <input id="register-password-input" type="password" maxlength="64" placeholder="At least 6 characters" autocomplete="new-password">
+        </div>
+        <button id="register-submit-btn" class="menu-btn primary" style="width:100%;">Create Account</button>
+      </div>
+
+      <p id="account-status" style="min-height:18px; font-size:13px; color:#ffb4a8; margin-top:10px;"></p>
     </div>
-    <div class="friend-section" style="border-top:none; margin-top:6px; padding-top:0;">
-      <h3>Your Player ID</h3>
-      <div id="account-my-id" class="friend-id">Not connected yet</div>
+
+    <!-- Logged in -->
+    <div id="auth-logged-in-box" style="display:none;">
+      <div class="friend-section" style="border-top:none; margin-top:6px; padding-top:0;">
+        <h3>Logged in as</h3>
+        <div id="account-username-display" class="friend-id"></div>
+      </div>
+      <div class="friend-section">
+        <h3>Your Player ID</h3>
+        <div id="account-my-id" class="friend-id">Not connected yet</div>
+      </div>
+      <button id="account-logout-btn" class="menu-btn small" style="width:100%; margin-top:16px;">Log Out</button>
     </div>
-    <button id="account-connect-btn" class="menu-btn primary" style="width:100%; margin-top:16px;">Connect</button>
-    <p id="account-status" style="min-height:18px; font-size:13px; color:#ffb4a8; margin-top:10px;"></p>
+
     <button id="account-close-btn" class="menu-btn small" style="margin-top:14px;">Back to Menu</button>
   </div>
 </div>
@@ -1257,19 +1442,35 @@
 <div id="friends-overlay" class="full-overlay">
   <div class="lobby-panel">
     <h2>Friends</h2>
-    <div class="lobby-row">
-      <div class="lobby-field"><label for="friend-id-input">Friend's Player ID</label><input id="friend-id-input" maxlength="16" placeholder="CP-XXXXXX"></div>
-      <button id="friend-add" class="menu-btn small">Add</button>
+
+    <div class="friend-tabs">
+      <button id="friend-tab-mine" class="friend-tab-btn active" type="button">My Friends</button>
+      <button id="friend-tab-online" class="friend-tab-btn" type="button">Online Now (Worldwide)</button>
     </div>
-    <p id="friends-status" style="min-height:18px; font-size:13px; color:#ffb4a8; margin-top:4px;"></p>
-    <div class="friend-section" style="border-top:none; padding-top:4px;">
-      <h3>Requests</h3>
-      <ul id="friend-requests" class="friend-list"></ul>
-      <h3 style="margin-top:14px;">Your Friends</h3>
-      <ul id="friend-list" class="friend-list"></ul>
-      <h3 style="margin-top:14px;">Online Now</h3>
-      <ul id="online-players-list" class="friend-list"></ul>
+
+    <!-- Tab 1: your friends, requests, add-by-ID -->
+    <div id="friend-panel-mine" class="friend-tab-panel active">
+      <div class="lobby-row" style="margin-top:14px;">
+        <div class="lobby-field"><label for="friend-id-input">Friend's Player ID</label><input id="friend-id-input" maxlength="16" placeholder="CP-XXXXXX"></div>
+        <button id="friend-add" class="menu-btn small">Add</button>
+      </div>
+      <p id="friends-status" style="min-height:18px; font-size:13px; color:#ffb4a8; margin-top:4px;"></p>
+      <div class="friend-section" style="border-top:none; padding-top:4px;">
+        <h3>Requests</h3>
+        <ul id="friend-requests" class="friend-list"></ul>
+        <h3 style="margin-top:14px;">Your Friends</h3>
+        <ul id="friend-list" class="friend-list"></ul>
+      </div>
     </div>
+
+    <!-- Tab 2: everyone online worldwide, right now -->
+    <div id="friend-panel-online" class="friend-tab-panel">
+      <div class="friend-section" style="border-top:none; margin-top:14px; padding-top:0;">
+        <h3>Online Now</h3>
+        <ul id="online-players-list" class="friend-list"></ul>
+      </div>
+    </div>
+
     <button id="friends-close-btn" class="menu-btn small" style="margin-top:14px;">Back to Menu</button>
   </div>
 </div>
@@ -1283,6 +1484,28 @@
       <input id="settings-sound-toggle" type="checkbox" style="width:22px; height:22px;">
     </div>
     <button id="settings-close-btn" class="menu-btn small" style="margin-top:18px;">Back to Menu</button>
+  </div>
+</div>
+<!-- Statistics -->
+<div id="statistics-overlay" class="full-overlay">
+  <div class="lobby-panel">
+
+    <h2>📊 Statistics</h2>
+
+    <div class="friend-section">
+      <p>Matches Played: <span id="stats-matches-played">0</span></p>
+      <p>Matches Won: <span id="stats-matches-won">0</span></p>
+      <p>Rounds Played: <span id="stats-rounds-played">0</span></p>
+      <p>Rounds Won: <span id="stats-rounds-won">0</span></p>
+      <p>Courts: <span id="stats-courts">0</span></p>
+    </div>
+
+    <button id="statistics-close-btn"
+            class="menu-btn small"
+            style="margin-top:20px;">
+      Back
+    </button>
+
   </div>
 </div>
 
@@ -1380,45 +1603,112 @@
   </div>
 </div>
 
-<!-- Online lobby -->
-<div id="lobby-overlay" class="full-overlay">
-  <div class="lobby-panel">
-    <h2>Play Online</h2>
+  <div id="lobby-overlay" class="full-overlay">
+    <div class="lobby-panel">
+
+    <h2>🌐 PLAY ONLINE</h2>
+
+    <button id="menu-quick-match"
+            class="menu-btn primary"
+            style="width:100%;margin-bottom:6px;">
+        ⚡ QUICK MATCH
+    </button>
+    <p style="font-size:12px; opacity:.7; margin:0 0 15px;">Matches you with 4 real online players -- never bots.</p>
+
+    <div id="quick-match-status">
+      <p id="quick-match-status-text">Waiting for players... (1/4)</p>
+      <button id="quick-match-cancel-btn" class="menu-btn small" type="button">Cancel</button>
+    </div>
+
+    <div class="lobby-divider">OR</div>
 
     <div class="lobby-field">
-      <label for="lobby-name">Your name</label>
-      <input id="lobby-name" type="text" maxlength="20" placeholder="Player">
+        <label for="lobby-name">Your Name</label>
+        <input id="lobby-name"
+              type="text"
+              maxlength="20"
+              placeholder="Player">
+        <span id="lobby-name-lock-hint" style="display:none; font-size:11px; opacity:.65; margin-top:4px;">Logged in as your account username -- log out to use a different name.</span>
     </div>
 
-    <div id="lobby-server-row" class="lobby-field" style="display:none;">
-      <label for="lobby-server">Server address (host:port)</label>
-      <input id="lobby-server" type="text" placeholder="localhost:8080">
-    </div>
+    <button id="lobby-create"
+            class="menu-btn"
+            style="width:100%;">
+        🏠 CREATE ROOM
+    </button>
 
-    <button id="lobby-create" class="menu-btn primary" style="width:100%;">Create Room</button>
-
-    <div class="lobby-divider">or join a room</div>
+    <div class="lobby-divider">OR JOIN A ROOM</div>
 
     <div class="lobby-row">
-      <div class="lobby-field">
-        <label for="lobby-code">Room code</label>
-        <input id="lobby-code" type="text" maxlength="6" placeholder="ABCDE">
-      </div>
-      <button id="lobby-join" class="menu-btn small">Join</button>
+
+        <div class="lobby-field">
+            <label for="lobby-code">Room Code</label>
+            <input id="lobby-code"
+                  type="text"
+                  maxlength="6"
+                  placeholder="ABCDE">
+        </div>
+
+        <button id="lobby-join"
+                class="menu-btn small">
+            🔑 JOIN
+        </button>
+
     </div>
+
+    <button id="lobby-friends"
+            class="menu-btn"
+            style="width:100%;margin-top:15px;">
+        👥 FRIENDS
+    </button>
 
     <p id="lobby-status"></p>
 
     <div id="lobby-room-info">
-      <label style="font-size:12px; text-transform:uppercase; letter-spacing:0.06em; color:var(--brass-bright);">Room code -- share with friends</label>
-      <div id="lobby-room-code">-----</div>
-      <ul id="lobby-player-list"></ul>
-      <button id="lobby-start-bots" class="menu-btn primary" style="width:100%; display:none;">Start Now (fill empty seats with bots)</button>
-      <button id="lobby-invite-friends" class="menu-btn small" style="width:100%; margin-top:8px;">👥 Invite Friends</button>
+
+        <label
+        style="font-size:12px;
+        text-transform:uppercase;
+        color:var(--brass-bright);">
+
+        ROOM CODE
+
+        </label>
+
+        <div id="lobby-room-code">
+            -----
+        </div>
+
+        <ul id="lobby-player-list"></ul>
+
+        <button id="lobby-start-bots"
+                class="menu-btn primary"
+                style="display:none;width:100%;">
+
+            ▶ START NOW
+
+        </button>
+
+        <button id="lobby-invite-friends"
+                class="menu-btn"
+                style="width:100%;margin-top:10px;">
+
+            📨 INVITE FRIENDS
+
+        </button>
+
     </div>
 
-    <button id="lobby-back" class="menu-btn small" style="margin-top: 18px;">Back to Menu</button>
+    <button id="lobby-back"
+            class="menu-btn small"
+            style="margin-top:20px;">
+
+        ← BACK
+
+    </button>
+
   </div>
+
 </div>
 
 <script>
@@ -1980,6 +2270,32 @@
   // ---------------- Game state ----------------
 
   const game = new Game();
+  const stats = {
+    matchesPlayed: 0,
+    matchesWon: 0,
+    roundsPlayed: 0,
+    roundsWon: 0,
+    courts: 0
+  };
+
+  // Stats used to live only in memory and reset to zero on every page
+  // reload -- loadStats()/saveStats() persist them across sessions.
+  function loadStats() {
+    try {
+      const saved = JSON.parse(localStorage.getItem("courtPieceStats") || "{}");
+      stats.matchesPlayed = saved.matchesPlayed || 0;
+      stats.matchesWon = saved.matchesWon || 0;
+      stats.roundsPlayed = saved.roundsPlayed || 0;
+      stats.roundsWon = saved.roundsWon || 0;
+      stats.courts = saved.courts || 0;
+    } catch (e) { /* corrupt or missing -- start from zero */ }
+  }
+
+  function saveStats() {
+    try { localStorage.setItem("courtPieceStats", JSON.stringify(stats)); } catch (e) {}
+  }
+
+  loadStats();
 
   let turnPlayer = 0;
   let trickNumber = 1;
@@ -2073,6 +2389,13 @@
 
     const shouldExit = window.confirm("Exit the game and return to the menu?");
     if (shouldExit) {
+      if (currentMode === "online" && socket && socket.readyState === WebSocket.OPEN) {
+        // Give up the seat for good -- otherwise the server's normal
+        // reconnect window would let a later connection (including a
+        // future Quick Match) auto-drop the player right back into
+        // this same room.
+        send({ type: "leave_room" });
+      }
       window.location.reload();
     } else {
       // Cancel the back navigation by re-arming a history entry so the
@@ -2229,6 +2552,30 @@
     tallyPanelText.textContent = `${team1} - ${team2}`;
 
     scorePanelText.textContent = `${game.team1Score} - ${game.team2Score}`;
+
+    updateBotsTargetTab();
+  }
+
+  // Same "Team X: Need N Tricks" banner the online game shows
+  // (updateTargetTab, further down), reusing the same #targetTab
+  // element and text so bots mode looks identical.
+  function updateBotsTargetTab() {
+    const tab = document.getElementById("targetTab");
+    if (!tab) return;
+
+    if (game.challengeMode && game.trumpTeam != null) {
+      tab.classList.remove("target-hidden");
+      tab.textContent = "🔥 Team " + game.trumpTeam + ": Need 13 Tricks";
+      return;
+    }
+
+    if (game.trump && game.trumpTeam != null) {
+      tab.classList.remove("target-hidden");
+      tab.textContent = "🎯 Team " + game.trumpTeam + ": Need 8 Tricks";
+      return;
+    }
+
+    tab.classList.add("target-hidden");
   }
 
   function renderPoolMarker() {
@@ -2640,17 +2987,29 @@
   }
 
   function resolveRoundEnd() {
+    stats.roundsPlayed++;
+
     const { team1, team2 } = game.teamTricks();
+    let team1WonRound;
 
     if (game.challengeMode) {
       const winningTeam = game.challengeTeam;
       if (winningTeam === 1) game.team1Score += 1; else game.team2Score += 1;
       showRoundBanner(`Team ${winningTeam} swept the round! Challenge successful.`);
       game.rotateDealer(true);
+      team1WonRound = winningTeam === 1;
     } else {
       let courtMsg = "";
-      if (team1 === 13) { game.team1Score += 1; courtMsg = "Team 1 made a court! "; }
-      else if (team2 === 13) { game.team2Score += 1; courtMsg = "Team 2 made a court! "; }
+      if (team1 === 13) {
+          stats.courts++;
+          game.team1Score += 1;
+          courtMsg = "Team 1 made a court! ";
+      }
+      else if (team2 === 13) {
+          stats.courts++;
+          game.team2Score += 1;
+          courtMsg = "Team 2 made a court! ";
+      }
 
       const trumpSucceeded = game.trumpTeam === 1 ? team1 >= 8 : team2 >= 8;
 
@@ -2663,17 +3022,33 @@
         if (!trumpSucceeded) game.team1Score += 1;
       }
 
+      // Team 1 is always the human's team (seat 0) -- this is the one
+      // and only "did I win this round" check, matching whichever
+      // branch above actually awarded Team 1 the round point.
+      team1WonRound =
+          (game.trumpTeam === 1 && trumpSucceeded) ||
+          (game.trumpTeam === 2 && !trumpSucceeded);
+
       showRoundBanner(courtMsg + msg);
       game.rotateDealer(trumpSucceeded);
     }
 
+    if (team1WonRound) stats.roundsWon++;
+
     renderHUD();
+    saveStats();
   }
+
 
   function afterRoundEnds() {
     if (game.matchOver()) {
+      stats.matchesPlayed++;
       setTimeout(() => {
         const winner = game.team1Score >= 5 ? 1 : 2;
+        if (winner === 1) {
+            stats.matchesWon++;
+        }
+        saveStats();
         showRoundBanner(`🏆 TEAM ${winner} WINS THE MATCH! 🏆`, true);
         showMatchOverModal(winner, game.team1Score, game.team2Score);
       }, ROUND_BANNER_MS - 300);
@@ -2746,18 +3121,49 @@
   const menuSettingsBtn = document.getElementById("menu-settings");
 
   const accountOverlay = document.getElementById("account-overlay");
-  const accountNameInput = document.getElementById("account-name-input");
   const accountMyId = document.getElementById("account-my-id");
-  const accountConnectBtn = document.getElementById("account-connect-btn");
   const accountStatus = document.getElementById("account-status");
   const accountCloseBtn = document.getElementById("account-close-btn");
 
+  const authLoggedOutBox = document.getElementById("auth-logged-out-box");
+  const authLoggedInBox = document.getElementById("auth-logged-in-box");
+  const accountUsernameDisplay = document.getElementById("account-username-display");
+  const authTabLoginBtn = document.getElementById("auth-tab-login");
+  const authTabRegisterBtn = document.getElementById("auth-tab-register");
+  const authFormLogin = document.getElementById("auth-form-login");
+  const authFormRegister = document.getElementById("auth-form-register");
+  const loginUsernameInput = document.getElementById("login-username-input");
+  const loginPasswordInput = document.getElementById("login-password-input");
+  const loginSubmitBtn = document.getElementById("login-submit-btn");
+  const registerUsernameInput = document.getElementById("register-username-input");
+  const registerPasswordInput = document.getElementById("register-password-input");
+  const registerSubmitBtn = document.getElementById("register-submit-btn");
+  const accountLogoutBtn = document.getElementById("account-logout-btn");
+
   const friendsOverlay = document.getElementById("friends-overlay");
   const friendsCloseBtn = document.getElementById("friends-close-btn");
+  const friendTabMineBtn = document.getElementById("friend-tab-mine");
+  const friendTabOnlineBtn = document.getElementById("friend-tab-online");
+  const friendPanelMine = document.getElementById("friend-panel-mine");
+  const friendPanelOnline = document.getElementById("friend-panel-online");
+
+  const quickMatchBtn = document.getElementById("menu-quick-match");
+  const quickMatchStatusBox = document.getElementById("quick-match-status");
+  const quickMatchStatusText = document.getElementById("quick-match-status-text");
+  const quickMatchCancelBtn = document.getElementById("quick-match-cancel-btn");
 
   const settingsOverlay = document.getElementById("settings-overlay");
   const settingsSoundToggle = document.getElementById("settings-sound-toggle");
   const settingsCloseBtn = document.getElementById("settings-close-btn");
+  const statisticsOverlay = document.getElementById("statistics-overlay");
+  const menuStatisticsBtn = document.getElementById("menu-statistics");
+  const statisticsCloseBtn = document.getElementById("statistics-close-btn");
+
+  const statsMatchesPlayed = document.getElementById("stats-matches-played");
+  const statsMatchesWon = document.getElementById("stats-matches-won");
+  const statsRoundsPlayed = document.getElementById("stats-rounds-played");
+  const statsRoundsWon = document.getElementById("stats-rounds-won");
+  const statsCourts = document.getElementById("stats-courts");
 
   const micToggleBtn = document.getElementById("mic-toggle-btn");
 
@@ -2776,6 +3182,69 @@
   let isCreator = false;
   let latestState = null;
   let playerId = localStorage.getItem("courtPiecePlayerId") || null;
+
+  // ---------------- Account (username/password login) ----------------
+  let authToken = localStorage.getItem("courtPieceAuthToken") || null;
+  let authUsername = localStorage.getItem("courtPieceAuthUsername") || null;
+  let inQuickMatchQueue = false;
+  // True from the moment Quick Match is requested until the real
+  // match assignment ("joined" with quickMatch:true) comes back.
+  // Guards against briefly rendering a stale room this connection
+  // got auto-reattached to (identify's normal reconnect behavior)
+  // before the fresh server-side leave_room + queueing finishes.
+  let pendingQuickMatch = false;
+
+  function isLoggedIn() { return !!authToken; }
+
+  function persistAuth(token, username, id) {
+    authToken = token;
+    authUsername = username;
+    localStorage.setItem("courtPieceAuthToken", token);
+    localStorage.setItem("courtPieceAuthUsername", username);
+    if (id) {
+      playerId = id;
+      localStorage.setItem("courtPiecePlayerId", id);
+    }
+    localStorage.setItem("courtPieceName", username);
+    syncLobbyNameField();
+  }
+
+  function clearAuth() {
+    authToken = null;
+    authUsername = null;
+    localStorage.removeItem("courtPieceAuthToken");
+    localStorage.removeItem("courtPieceAuthUsername");
+    syncLobbyNameField();
+  }
+
+  // Once logged in, "Your Name" in the online lobby is always the
+  // account's username -- locked so a logged-in player can't show up
+  // under a different name than their account. Logging out (or never
+  // logging in) leaves it free-text, same as before.
+  function syncLobbyNameField() {
+    const hint = document.getElementById("lobby-name-lock-hint");
+    if (isLoggedIn()) {
+      lobbyNameInput.value = authUsername;
+      lobbyNameInput.disabled = true;
+      if (hint) hint.style.display = "block";
+    } else {
+      lobbyNameInput.disabled = false;
+      if (hint) hint.style.display = "none";
+    }
+  }
+
+  function renderAccountBox() {
+    if (isLoggedIn()) {
+      authLoggedOutBox.style.display = "none";
+      authLoggedInBox.style.display = "block";
+      accountUsernameDisplay.textContent = authUsername;
+      accountMyId.textContent = playerId || "Not connected yet";
+    } else {
+      authLoggedOutBox.style.display = "block";
+      authLoggedInBox.style.display = "none";
+      accountStatus.textContent = "";
+    }
+  }
   let friends = [];
   let onlinePlayersNow = [];
   const onlinePlayersListEl = document.getElementById("online-players-list");
@@ -2875,8 +3344,8 @@
   // you're inside an online room), so a player can log in once, see
   // their ID, and manage friends before ever creating/joining a room.
 
-  accountNameInput.value = localStorage.getItem("courtPieceName") || "";
   lobbyNameInput.value = localStorage.getItem("courtPieceName") || "";
+  syncLobbyNameField(); // locks it immediately if a session token is already saved
   lobbyNameInput.addEventListener("change", () => {
     if (lobbyNameInput.value.trim()) localStorage.setItem("courtPieceName", lobbyNameInput.value.trim());
   });
@@ -2892,15 +3361,7 @@
   menuAccountBtn.addEventListener("click", () => {
     menuOverlay.classList.remove("visible");
     accountOverlay.classList.add("visible");
-    accountMyId.textContent = playerId || "Not connected yet";
-  });
-
-  accountConnectBtn.addEventListener("click", () => {
-    const name = accountNameInput.value.trim() || "Player";
-    localStorage.setItem("courtPieceName", name);
-    lobbyNameInput.value = name;
-    accountStatus.textContent = "Connecting...";
-    ensureConnected(() => { accountStatus.textContent = "Connected."; });
+    renderAccountBox();
   });
 
   accountCloseBtn.addEventListener("click", () => {
@@ -2908,12 +3369,90 @@
     menuOverlay.classList.add("visible");
   });
 
+  // ---- Login / Register tab switch ----
+  authTabLoginBtn.addEventListener("click", () => {
+    authTabLoginBtn.classList.add("active");
+    authTabRegisterBtn.classList.remove("active");
+    authFormLogin.style.display = "block";
+    authFormRegister.style.display = "none";
+    accountStatus.textContent = "";
+  });
+  authTabRegisterBtn.addEventListener("click", () => {
+    authTabRegisterBtn.classList.add("active");
+    authTabLoginBtn.classList.remove("active");
+    authFormRegister.style.display = "block";
+    authFormLogin.style.display = "none";
+    accountStatus.textContent = "";
+  });
+
+  // ---- Register ----
+  registerSubmitBtn.addEventListener("click", async () => {
+    const username = registerUsernameInput.value.trim();
+    const password = registerPasswordInput.value;
+
+    if (username.length < 6) { accountStatus.textContent = "Username must be at least 6 characters."; return; }
+    if (password.length < 6) { accountStatus.textContent = "Password must be at least 6 characters."; return; }
+
+    accountStatus.textContent = "Creating account...";
+    try {
+      const res = await fetch(apiUrl("/register"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) { accountStatus.textContent = data.error || "Could not create account."; return; }
+
+      persistAuth(data.token, data.username, data.playerId);
+      lobbyNameInput.value = data.username;
+      accountStatus.textContent = "";
+      renderAccountBox();
+      ensureConnected(() => {});
+    } catch (e) {
+      accountStatus.textContent = "Couldn't reach the server. Try again.";
+    }
+  });
+
+  // ---- Log in ----
+  loginSubmitBtn.addEventListener("click", async () => {
+    const username = loginUsernameInput.value.trim();
+    const password = loginPasswordInput.value;
+
+    if (!username || !password) { accountStatus.textContent = "Enter your username and password."; return; }
+
+    accountStatus.textContent = "Logging in...";
+    try {
+      const res = await fetch(apiUrl("/login"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) { accountStatus.textContent = data.error || "Could not log in."; return; }
+
+      persistAuth(data.token, data.username, data.playerId);
+      lobbyNameInput.value = data.username;
+      accountStatus.textContent = "";
+      renderAccountBox();
+      ensureConnected(() => {});
+    } catch (e) {
+      accountStatus.textContent = "Couldn't reach the server. Try again.";
+    }
+  });
+
+  accountLogoutBtn.addEventListener("click", () => {
+    clearAuth();
+    if (socket) { try { socket.close(); } catch (e) {} socket = null; }
+    renderAccountBox();
+  });
+
   menuFriendsBtn.addEventListener("click", () => {
     menuOverlay.classList.remove("visible");
     friendsOverlay.classList.add("visible");
     friendsStatus.textContent = "";
-    if (!socket || socket.readyState !== WebSocket.OPEN) {
-      const name = localStorage.getItem("courtPieceName") || accountNameInput.value.trim() || "Player";
+    if (!isLoggedIn()) {
+      friendsStatus.textContent = "Log in from Account to add friends and see who's online.";
+    } else if (!socket || socket.readyState !== WebSocket.OPEN) {
       friendsStatus.textContent = "Connecting...";
       ensureConnected(() => { friendsStatus.textContent = ""; renderFriends(); });
     } else {
@@ -2924,6 +3463,20 @@
   friendsCloseBtn.addEventListener("click", () => {
     friendsOverlay.classList.remove("visible");
     menuOverlay.classList.add("visible");
+  });
+
+  // ---- Friends / Online Now tab switch ----
+  friendTabMineBtn.addEventListener("click", () => {
+    friendTabMineBtn.classList.add("active");
+    friendTabOnlineBtn.classList.remove("active");
+    friendPanelMine.classList.add("active");
+    friendPanelOnline.classList.remove("active");
+  });
+  friendTabOnlineBtn.addEventListener("click", () => {
+    friendTabOnlineBtn.classList.add("active");
+    friendTabMineBtn.classList.remove("active");
+    friendPanelOnline.classList.add("active");
+    friendPanelMine.classList.remove("active");
   });
 
   lobbyInviteFriendsBtn.addEventListener("click", () => {
@@ -2946,6 +3499,21 @@
   settingsCloseBtn.addEventListener("click", () => {
     settingsOverlay.classList.remove("visible");
     menuOverlay.classList.add("visible");
+  });
+  menuStatisticsBtn.addEventListener("click", () => {
+      menuOverlay.classList.remove("visible");
+      statisticsOverlay.classList.add("visible");
+
+      statsMatchesPlayed.textContent = stats.matchesPlayed;
+      statsMatchesWon.textContent = stats.matchesWon;
+      statsRoundsPlayed.textContent = stats.roundsPlayed;
+      statsRoundsWon.textContent = stats.roundsWon;
+      statsCourts.textContent = stats.courts;
+  });
+
+  statisticsCloseBtn.addEventListener("click", () => {
+      statisticsOverlay.classList.remove("visible");
+      menuOverlay.classList.add("visible");
   });
 
   // ---------------- Match-over restart popup ----------------
@@ -2971,6 +3539,9 @@
   });
 
   matchOverMenuBtn.addEventListener("click", () => {
+    if (currentMode === "online" && socket && socket.readyState === WebSocket.OPEN) {
+      send({ type: "leave_room" });
+    }
     window.location.reload();
   });
 
@@ -2982,6 +3553,15 @@
     return `${proto}//${window.location.host}`;
   }
 
+  // Same-server HTTP base for /register and /login -- mirrors
+  // serverUrl() above but with http(s) instead of ws(s).
+  function apiUrl(path) {
+    if (window.location.protocol === "file:") {
+      return "https://court-piece-online1.onrender.com" + path;
+    }
+    return path;
+  }
+
   function connectSocket(onOpen) {
     if (socket) {
       try { socket.close(); } catch (e) {}
@@ -2990,7 +3570,12 @@
 
     socket.addEventListener("open", () => {
       roundBannerEl.classList.remove("visible"); // hide old "Connection lost" banner
-      send({ type: "identify", playerId, name: lobbyNameInput.value || localStorage.getItem("courtPieceName") || "Player" });
+      send({
+        type: "identify",
+        token: authToken || undefined,
+        playerId,
+        name: lobbyNameInput.value || localStorage.getItem("courtPieceName") || "Player"
+      });
       if (onOpen) onOpen();
     });
     socket.addEventListener("message", (event) => {
@@ -3000,6 +3585,11 @@
       lobbyStatus.textContent = "Couldn't reach the server. Check the address and that it's running.";
     });
     socket.addEventListener("close", () => {
+      if (inQuickMatchQueue) {
+        inQuickMatchQueue = false;
+        quickMatchBtn.disabled = false;
+        quickMatchStatusBox.classList.remove("visible");
+      }
       if (latestState && latestState.phase !== "match_over") {
         showRoundBanner("Connection lost.", true);
       }
@@ -3044,6 +3634,27 @@
     friendIdInput.value = "";
   });
 
+  quickMatchBtn.addEventListener("click", () => {
+    lobbyStatus.textContent = "";
+    quickMatchBtn.disabled = true;
+    quickMatchStatusBox.classList.add("visible");
+    quickMatchStatusText.textContent = "Looking for players...";
+    pendingQuickMatch = true;
+
+    ensureConnected(() => {
+      inQuickMatchQueue = true;
+      send({ type: "quick_match" });
+    });
+  });
+
+  quickMatchCancelBtn.addEventListener("click", () => {
+    send({ type: "cancel_quick_match" });
+    inQuickMatchQueue = false;
+    pendingQuickMatch = false;
+    quickMatchBtn.disabled = false;
+    quickMatchStatusBox.classList.remove("visible");
+    lobbyStatus.textContent = "";
+  });
 
   // ---------------- Server message handling ----------------
 
@@ -3054,25 +3665,67 @@
     }
     if (msg.type === "friends") { friends = msg.friends || []; renderFriends(); return; }
     if (msg.type === "online_list") { onlinePlayersNow = msg.players || []; renderOnlinePlayers(); return; }
+    if (msg.type === "auth_error") {
+      lobbyStatus.textContent = msg.message;
+      accountStatus.textContent = msg.message;
+      return;
+    }
+    if (msg.type === "queue_status") {
+      if (msg.insufficient) {
+        inQuickMatchQueue = false;
+        pendingQuickMatch = false;
+        quickMatchBtn.disabled = false;
+        quickMatchStatusBox.classList.remove("visible");
+        lobbyStatus.textContent = `Insufficient players online (${msg.online || 0} online, need ${msg.needed || 4}). Try again later.`;
+        return;
+      }
+      if (msg.cancelled) {
+        inQuickMatchQueue = false;
+        pendingQuickMatch = false;
+        quickMatchBtn.disabled = false;
+        quickMatchStatusBox.classList.remove("visible");
+        return;
+      }
+      // Once the server confirms we're genuinely queued, any stale
+      // reconnect from identify() has already been undone server-side
+      // -- safe to allow state/joined messages through again.
+      pendingQuickMatch = false;
+      quickMatchStatusBox.classList.add("visible");
+      quickMatchStatusText.textContent = `Waiting for players... (${msg.playersWaiting}/${msg.needed || 4})`;
+      return;
+    }
     if (msg.type === "friend_invite") {
       lobbyCodeInput.value = msg.code; lobbyStatus.textContent = `${msg.name} invited you to room ${msg.code}. Press Join.`; return;
     }
 
     if (msg.type === "joined") {
+      // A stale auto-reconnect from identify(), arriving while we're
+      // waiting on a fresh Quick Match assignment -- ignore it, the
+      // server is about to walk this connection out of that room on
+      // its own (see quick_match handling on the server).
+      if (pendingQuickMatch && !msg.quickMatch) return;
+
       mySeat = msg.seat;
       myRoomCode = msg.code;
       isCreator = mySeat === 0;
 
+      inQuickMatchQueue = false;
+      pendingQuickMatch = false;
+      quickMatchBtn.disabled = false;
+      quickMatchStatusBox.classList.remove("visible");
 
       lobbyStatus.textContent = "";
-      lobbyRoomInfo.classList.add("visible");
-      lobbyRoomCode.textContent = msg.code;
-      lobbyStartBotsBtn.style.display = isCreator ? "inline-block" : "none";
+      if (!msg.quickMatch) {
+        lobbyRoomInfo.classList.add("visible");
+        lobbyRoomCode.textContent = msg.code;
+        lobbyStartBotsBtn.style.display = isCreator ? "inline-block" : "none";
+      }
       renderFriends();
       return;
     }
 
     if (msg.type === "error") {
+      pendingQuickMatch = false;
       lobbyStatus.textContent = msg.message;
       return;
     }
@@ -3090,6 +3743,11 @@
     }
 
     if (msg.type === "state") {
+        // Same stale-reconnect guard as "joined" above -- don't render
+        // an old room's game state while a fresh Quick Match is still
+        // being set up.
+        if (pendingQuickMatch) return;
+
         latestState = msg;
 
         updateTargetTab(msg);
@@ -3209,7 +3867,6 @@
 
     function ensurePeer(seat) {
       if (peers[seat]) return peers[seat];
-
       const pc = new RTCPeerConnection(rtcConfig);
       makingOffer[seat] = false;
       pendingCandidates[seat] = [];
@@ -3254,6 +3911,29 @@
 
       peers[seat] = pc;
       return pc;
+    }
+
+    // Builds a peer connection to every real, currently-seated
+    // opponent -- called on every "state" broadcast, independent of
+    // whether *this* player has enabled their own mic. This is what
+    // makes listening work regardless of mic status: a connection to
+    // seat X is created the first moment X is seen as a real,
+    // connected player (ensurePeer is a no-op on repeat calls), so
+    // whenever X turns their mic on, the addTrack on their end
+    // renegotiates and their audio flows in immediately. Without this,
+    // only players who had personally clicked "Enable Mic" ever built
+    // any connections at all, so someone who only wanted to listen --
+    // or whose mic permission failed -- heard nothing from anyone,
+    // and a player who joined the room after everyone else had
+    // already spoken once could permanently miss their offer.
+    function syncRoom(state) {
+      if (mySeat === null || mySeat === undefined || !state || !state.players) return;
+      for (let seat = 0; seat < 4; seat++) {
+        if (seat === mySeat) continue;
+        const player = state.players[seat];
+        if (!player || player.isBot) continue;
+        ensurePeer(seat);
+      }
     }
 
     async function handleSignal(fromSeat, data) {
@@ -3325,19 +4005,24 @@
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       } catch (e) {
-        showVoiceError("Couldn't access your microphone. Check permissions, and that this page is loaded over HTTPS (or localhost).");
+        console.error("getUserMedia failed:", e.name, e.message);
+        showVoiceError("Couldn't access your microphone -- you can still listen to voice chat, but others won't hear you. Check mic permissions and try again.");
         return false;
       }
       enabled = true;
       muted = false;
 
-      // Make sure a peer connection exists for every other seat, then
-      // attach our track to all of them. addTrack triggers
+      // Connections to every real opponent already exist by this point
+      // (syncRoom runs on every state broadcast, mic or no mic) -- this
+      // is just a defensive catch-up in case enable() is somehow
+      // called before the first state message has arrived yet.
+      if (typeof latestState !== "undefined" && latestState) syncRoom(latestState);
+
+      // addTrack on an existing peer connection re-triggers
       // onnegotiationneeded automatically -- covers both a brand-new
-      // peer and one that already existed from an incoming call.
-      for (let seat = 0; seat < 4; seat++) {
-        if (seat !== mySeat) ensurePeer(seat);
-      }
+      // peer and one that already existed listen-only up to now, so
+      // audio in both directions ends up wired correctly regardless of
+      // who enabled their mic first.
       addLocalTrackToAllPeers();
       return true;
     }
@@ -3362,7 +4047,7 @@
     }
 
     return {
-      enable, disable, handleSignal, toggleMute,
+      enable, disable, handleSignal, toggleMute, syncRoom,
       isEnabled: () => enabled,
       isMuted: () => muted
     };
@@ -3576,6 +4261,12 @@
   }
 
   function renderOnlineState(state) {
+    // Keep everyone's peer-connection mesh current every time state
+    // updates -- this is what lets a player hear the room even if they
+    // never touch the mic button themselves, and lets a late joiner
+    // still receive audio from players who started talking earlier.
+    if (typeof Voice !== "undefined") Voice.syncRoom(state);
+
     renderOnlineHand(state);
     renderOnlineSeats(state);
     renderOnlineHUD(state);
@@ -4233,17 +4924,53 @@
         `${role}<br><span class="player-real-name">${player.name}</span>${bidText}`;
       seatEl.classList.toggle("active-turn", spadesTurnPlayer === idx);
     }
+
+    renderSpadesYourStatus();
+  }
+
+  // Same "Bid X · Won Y" line the other three seats get, shown above
+  // your own hand instead of above a seat since the human player has
+  // no seat element of their own.
+  function renderSpadesYourStatus() {
+    const statusEl = document.getElementById("spades-your-status");
+    if (!statusEl) return;
+
+    const me = spadesGame.players[0];
+    if (me.bid === null) {
+      statusEl.classList.remove("visible");
+      return;
+    }
+
+    statusEl.textContent = `Bid ${me.isNil ? "Nil" : me.bid} · Won ${me.tricksWon}`;
+    statusEl.classList.add("visible");
   }
 
   function renderSpadesHUD() {
     spadesRoundPanelText.textContent = `Round ${spadesGame.roundNumber}`;
     spadesStatusPanelText.textContent = spadesGame.spadesBroken ? "Broken" : "Not Broken";
 
+    const rosterEl = document.getElementById("spades-score-panel-roster");
+
     if (spadesGame.mode === "team") {
+      const team1Names = [0, 2].map((i) => spadesGame.players[i].name).join(" & ");
+      const team2Names = [1, 3].map((i) => spadesGame.players[i].name).join(" & ");
+      if (rosterEl) rosterEl.textContent = `${team1Names}  vs  ${team2Names}`;
       spadesScorePanelText.textContent = `${spadesGame.team1Score} - ${spadesGame.team2Score}`;
     } else {
-      spadesScorePanelText.textContent = spadesGame.individualScores.join(" / ");
+      const names = spadesGame.players.map((p) => p.name).join(" · ");
+      if (rosterEl) rosterEl.textContent = names;
+      spadesScorePanelText.textContent = spadesGame.individualScores.join(" · ");
     }
+
+    updateSpadesTargetWatermark();
+  }
+
+  // Faint "TARGET <score>" text painted on the felt -- visible in both
+  // team and individual modes, always reflects the current match's
+  // winning score.
+  function updateSpadesTargetWatermark() {
+    const el = document.getElementById("spades-target-watermark");
+    if (el) el.textContent = `TARGET ${SPADES_TARGET_SCORE}`;
   }
 
   function showSpadesBanner(text) {

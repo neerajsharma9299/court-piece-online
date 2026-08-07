@@ -25,11 +25,15 @@ const BOT_THINK_MS = 650;
 const CHALLENGE_THINK_MS = 900;
 const TRICK_HOLD_MS = 2000;
 const ROUND_BANNER_MS = 2600;
+const RECONNECT_TIMEOUT_MS = 30000; // 30 seconds
 
 // ---------------- Room management ----------------
 
 const rooms = new Map(); // code -> Room
 const onlinePlayers = new Map(); // player ID -> live WebSocket
+// ---------------- Matchmaking ----------------
+
+const quickMatchQueue = [];
 
 function loadUsers() {
   try { return JSON.parse(fs.readFileSync(USERS_FILE, "utf8")); }
@@ -79,7 +83,9 @@ class Room {
     this.code = code;
     this.game = new Game();
     this.sockets = [null, null, null, null];
+    this.playerIds = [null, null, null, null];
     this.names = ["Player 1", "Player 2", "Player 3", "Player 4"];
+    this.reconnectTimers = [null, null, null, null];
     this.started = false;
 
     this.phase = "lobby"; // lobby, trump, challenge, trick, round_over, match_over
@@ -155,6 +161,68 @@ class Room {
   broadcastState() {
     for (let i = 0; i < 4; i++) this.send(i, this.buildStateFor(i));
   }
+}
+function removeFromQuickMatch(ws) {
+  const index = quickMatchQueue.indexOf(ws);
+
+  if (index !== -1) {
+    quickMatchQueue.splice(index, 1);
+  }
+}
+
+function sendQueueUpdate() {
+
+  for (const player of quickMatchQueue) {
+
+    sendWs(player, {
+      type: "queue_status",
+      playersWaiting: quickMatchQueue.length,
+      needed: 4
+    });
+
+  }
+
+}
+
+// Pulls the first 4 *currently connected* players off the queue and
+// drops them straight into a brand-new room -- all 4 seats are real
+// sockets, so isBotSeat() is false for every seat and no bot ever
+// gets added. Anyone who disconnected or cancelled between joining
+// the queue and this running has already been removed by
+// removeFromQuickMatch() (called on both "close" and
+// "cancel_quick_match"), so a player who left is never swept into a
+// match they didn't ask to play.
+function tryStartQuickMatch() {
+  if (quickMatchQueue.length < 4) return;
+
+  const group = quickMatchQueue.splice(0, 4).filter((ws) => ws && ws.alive);
+
+  if (group.length < 4) {
+    // Someone in the group went stale between queueing and matching --
+    // put whoever is still connected back at the front of the line
+    // and wait for the queue to refill instead of matching with a bot.
+    for (let i = group.length - 1; i >= 0; i--) quickMatchQueue.unshift(group[i]);
+    sendQueueUpdate();
+    return;
+  }
+
+  const usersDb = loadUsers();
+  const code = makeRoomCode();
+  const room = new Room(code);
+  rooms.set(code, room);
+
+  group.forEach((ws, seat) => {
+    room.sockets[seat] = ws;
+    room.playerIds[seat] = ws.playerId || null;
+    room.names[seat] = (usersDb.users[ws.playerId] || {}).name || ws.playerName || `Player ${seat + 1}`;
+
+    if (typeof ws._enterRoom === "function") ws._enterRoom(room, seat);
+
+    sendWs(ws, { type: "joined", code: room.code, seat, quickMatch: true });
+  });
+
+  room.broadcastState();
+  maybeStart(room); // all 4 seats are real sockets -- no bots involved
 }
 
 function getRoom(code) {
@@ -554,9 +622,26 @@ const server = http.createServer((req, res) => {
     req.on("end", async () => {
 
       try {
-        console.log("REGISTER BODY:", body);
+        const { username, password } = JSON.parse(body || "{}");
+        const cleanUsername = String(username || "").trim();
 
-        const { username, password } = JSON.parse(body);
+        // Username: 6+ characters, letters/numbers/underscore only --
+        // no phone number or email, just a unique handle.
+        if (cleanUsername.length < 6) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Username must be at least 6 characters." }));
+          return;
+        }
+        if (!/^[a-zA-Z0-9_]+$/.test(cleanUsername)) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Username can only contain letters, numbers, and underscores." }));
+          return;
+        }
+        if (!password || String(password).length < 6) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Password must be at least 6 characters." }));
+          return;
+        }
 
         const playerId =
           "CP-" + Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -566,7 +651,7 @@ const server = http.createServer((req, res) => {
         db.run(
           `INSERT INTO users (username, password_hash, player_id)
            VALUES (?, ?, ?)`,
-          [username, hash, playerId],
+          [cleanUsername, hash, playerId],
           function (err) {
 
             if (err) {
@@ -577,9 +662,25 @@ const server = http.createServer((req, res) => {
               return;
             }
 
+            // Mirror the account into users.json too -- that's the
+            // store the friends/online-list system already reads
+            // from, so a brand-new account shows up with the right
+            // display name right away instead of "Player".
+            const udb = loadUsers();
+            udb.users[playerId] = { name: cleanUsername, friends: [], incoming: [] };
+            saveUsers(udb);
+
+            const token = jwt.sign(
+              { playerId, username: cleanUsername },
+              JWT_SECRET,
+              { expiresIn: "30d" }
+            );
+
             res.writeHead(200, { "Content-Type": "application/json" });
             res.end(JSON.stringify({
               success: true,
+              token,
+              username: cleanUsername,
               playerId
             }));
           }
@@ -587,8 +688,8 @@ const server = http.createServer((req, res) => {
 
       } catch (e) {
         console.error("REGISTER ERROR:", e);
-        res.writeHead(400);
-        res.end("Invalid request");
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Invalid request" }));
       }
     });
 
@@ -630,6 +731,15 @@ const server = http.createServer((req, res) => {
               return;
             }
 
+            // Make sure users.json (friends/online-list storage) has
+            // an entry for this account -- covers accounts created
+            // before this sync existed.
+            const udb = loadUsers();
+            if (!udb.users[user.player_id]) {
+              udb.users[user.player_id] = { name: user.username, friends: [], incoming: [] };
+              saveUsers(udb);
+            }
+
             const token = jwt.sign(
               {
                 userId: user.id,
@@ -669,6 +779,42 @@ server.on("upgrade", (req, socket) => {
   let joinedRoom = null;
   let seatIndex = null;
 
+  // Lets code outside this closure (the quick-match matchmaker, which
+  // matches players across different connections at once) attach this
+  // socket to a room exactly the way create_room/join_room do above.
+  ws._enterRoom = (room, seat) => {
+    joinedRoom = room;
+    seatIndex = seat;
+  };
+
+  // Permanently vacates whatever room/seat this connection currently
+  // holds -- unlike a plain disconnect (which starts a 30s reconnect
+  // window and leaves the seat claimed by this playerId forever),
+  // this clears playerIds[seat] too, so identify's reconnect scan can
+  // never auto-attach a future connection back into this room. Used
+  // both for an explicit "leave_room" request and as a safety net at
+  // the start of "quick_match", so Quick Match can never drop someone
+  // back into a room they already walked away from.
+  function leaveRoomInternal() {
+    if (!joinedRoom || seatIndex === null) return;
+    const room = joinedRoom;
+    const seat = seatIndex;
+
+    if (room.reconnectTimers[seat]) {
+      clearTimeout(room.reconnectTimers[seat]);
+      room.reconnectTimers[seat] = null;
+    }
+
+    room.sockets[seat] = null;
+    room.playerIds[seat] = null;
+
+    room.broadcastEvent(`${room.names[seat]} left the room.`);
+    room.broadcastState();
+
+    joinedRoom = null;
+    seatIndex = null;
+  }
+
   ws.on("message", (raw) => {
     let msg;
     try {
@@ -684,6 +830,7 @@ server.on("upgrade", (req, socket) => {
 
       seatIndex = 0;
       room.sockets[0] = ws;
+      room.playerIds[0] = ws.playerId || null;
       room.names[0] = cleanName(msg.name, "Player 1");
       joinedRoom = room;
 
@@ -706,6 +853,7 @@ server.on("upgrade", (req, socket) => {
 
       seatIndex = freeSeat;
       room.sockets[freeSeat] = ws;
+      room.playerIds[freeSeat] = ws.playerId || null;
       room.names[freeSeat] = cleanName(msg.name, `Player ${freeSeat + 1}`);
       joinedRoom = room;
 
@@ -721,22 +869,131 @@ server.on("upgrade", (req, socket) => {
       return;
     }
 
+    if (msg.type === "leave_room") {
+      leaveRoomInternal();
+      return;
+    }
+
+    // -------- Quick Match (real players only, never bots) --------
+    if (msg.type === "quick_match") {
+      if (!ws.playerId) {
+        sendWs(ws, { type: "error", message: "Please connect first." });
+        return;
+      }
+
+      // Quick Match always starts from a clean slate -- if this
+      // connection had been auto-reattached (by identify's reconnect
+      // scan) to a room it previously left, walk away from that room
+      // for good before queueing. Fixes Quick Match ever dropping a
+      // player back into an old room, bots and all.
+      leaveRoomInternal();
+
+      if (quickMatchQueue.includes(ws)) return; // already queued, ignore duplicate
+
+      // Need at least 4 people connected to the app right now, or
+      // there is no way to fill the room with real players -- fail
+      // fast instead of leaving the player waiting forever or, worse,
+      // padding the room with bots.
+      if (onlinePlayers.size < 4) {
+        sendWs(ws, {
+          type: "queue_status",
+          insufficient: true,
+          online: onlinePlayers.size,
+          needed: 4
+        });
+        return;
+      }
+
+      quickMatchQueue.push(ws);
+      sendQueueUpdate();
+      tryStartQuickMatch();
+      return;
+    }
+
+    if (msg.type === "cancel_quick_match") {
+      removeFromQuickMatch(ws);
+      sendWs(ws, { type: "queue_status", playersWaiting: 0, cancelled: true, needed: 4 });
+      sendQueueUpdate();
+      return;
+    }
 
     // -------- Player identity, friends, and room invitations --------
     // These messages work before a player enters a room, so the lobby can
     // show friends immediately after connecting.
     if (msg.type === "identify") {
       const db = loadUsers();
-      let id = String(msg.playerId || "").toUpperCase();
-      if (!db.users[id]) {
-        id = makePlayerId(db);
-        db.users[id] = { name: cleanName(msg.name), friends: [], incoming: [] };
+      let id = null;
+      let name = null;
+
+      // Logged-in players (username + password, via /register or
+      // /login) send the JWT they were issued. That token is the
+      // source of truth for who they are -- it always wins over a
+      // guest playerId/name pair so a logged-in identity can't be
+      // spoofed by passing a different playerId.
+      if (msg.token) {
+        try {
+          const payload = jwt.verify(msg.token, JWT_SECRET);
+          id = payload.playerId;
+          name = payload.username;
+        } catch (e) {
+          sendWs(ws, { type: "auth_error", message: "Your session expired -- please log in again." });
+        }
       }
-      db.users[id].name = cleanName(msg.name, db.users[id].name);
+
+      if (!id) {
+        // Guest fallback -- keeps "Play vs Bots" and anonymous online
+        // play working without requiring an account.
+        id = String(msg.playerId || "").toUpperCase();
+        if (!id || !db.users[id]) id = makePlayerId(db);
+        name = cleanName(msg.name, (db.users[id] || {}).name);
+      }
+
+      if (!db.users[id]) {
+        db.users[id] = { name: cleanName(name), friends: [], incoming: [] };
+      } else if (name) {
+        db.users[id].name = cleanName(name, db.users[id].name);
+      }
+
       saveUsers(db);
       ws.playerId = id;
+      ws.playerName = db.users[id].name;
+      // ==========================
+      // Reconnect to existing room
+      // ==========================
+
+      for (const room of rooms.values()) {
+
+        const seat = room.playerIds.indexOf(id);
+
+        if (seat !== -1 && room.sockets[seat] === null) {
+
+          room.sockets[seat] = ws;
+
+          if (room.reconnectTimers[seat]) {
+            clearTimeout(room.reconnectTimers[seat]);
+            room.reconnectTimers[seat] = null;
+          }
+
+          joinedRoom = room;
+          seatIndex = seat;
+
+          sendWs(ws, {
+            type: "joined",
+            code: room.code,
+            seat
+          });
+
+          room.broadcastEvent(
+            `${room.names[seat]} reconnected.`
+          );
+
+          room.broadcastState();
+
+          break;
+        }
+      }
       onlinePlayers.set(id, ws);
-      sendWs(ws, { type: "identity", playerId: id });
+      sendWs(ws, { type: "identity", playerId: id, name: db.users[id].name });
       refreshOnlineFriends();
       broadcastOnlineList();
       return;
@@ -790,6 +1047,8 @@ server.on("upgrade", (req, socket) => {
   });
 
   ws.on("close", () => {
+    removeFromQuickMatch(ws);
+    sendQueueUpdate();
     if (ws.playerId && onlinePlayers.get(ws.playerId) === ws) {
       onlinePlayers.delete(ws.playerId);
       refreshOnlineFriends();
@@ -797,14 +1056,28 @@ server.on("upgrade", (req, socket) => {
     }
     if (joinedRoom && seatIndex !== null) {
       joinedRoom.sockets[seatIndex] = null;
-      // Seat automatically becomes bot-controlled (isBotSeat checks
-      // for a null socket) -- the room keeps going.
-      joinedRoom.broadcastEvent(`${joinedRoom.names[seatIndex]} disconnected -- a bot will take over.`);
+
+      joinedRoom.broadcastEvent(
+        `${joinedRoom.names[seatIndex]} disconnected. Waiting 30 seconds for reconnect...`
+      );
+
       joinedRoom.broadcastState();
 
-      if (joinedRoom.started && joinedRoom.phase === "trick" && joinedRoom.turnPlayer === seatIndex) {
-        setTimeout(() => botPlay(joinedRoom), BOT_THINK_MS);
-      }
+      joinedRoom.reconnectTimers[seatIndex] = setTimeout(() => {
+
+          joinedRoom.broadcastEvent(
+            `${joinedRoom.names[seatIndex]} did not reconnect. Bot takes over.`
+          );
+
+          if (
+              joinedRoom.started &&
+              joinedRoom.phase === "trick" &&
+              joinedRoom.turnPlayer === seatIndex
+          ) {
+              botPlay(joinedRoom);
+          }
+
+      }, RECONNECT_TIMEOUT_MS);
     }
   });
 });
