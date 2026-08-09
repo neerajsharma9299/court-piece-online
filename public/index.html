@@ -133,6 +133,48 @@
       margin: 4px 0 2px;
     }
 
+    /* ---------- Colored score chips (Spades match-score panel) ---------- */
+    .score-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+    }
+    .score-chip {
+      flex: 1 1 auto;
+      min-width: 60px;
+      border-radius: 10px;
+      padding: 6px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 3px 8px rgba(0,0,0,.35);
+    }
+    .score-chip-value {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1;
+      color: #fff;
+    }
+    .score-chip-sub {
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    .score-chip-a { background: linear-gradient(160deg, #3f7ee0, #1c4fae); }
+    .score-chip-b { background: linear-gradient(160deg, #d1466a, #8f1f42); }
+
+    @media (max-width: 700px) {
+      .score-chip-value { font-size: 16px; }
+      .score-chip-sub { font-size: 8px; }
+      .score-chip { padding: 4px 5px; border-radius: 7px; min-width: 44px; }
+    }
+
     .spades-bid-label {
       display: block;
       margin-top: 3px;
@@ -368,6 +410,10 @@
         box-shadow: 0 12px 24px rgba(0,0,0,.55);
         z-index: 500;
     }
+
+    /* Your-turn highlighting is done purely with extra spacing between
+       the legal-to-play cards and the rest of the fan (see the hand
+       renderers in JS) -- no border glow or dimming, cards stay plain. */
 
     .table-card {
       transition: none;
@@ -627,6 +673,64 @@
 
     #mic-toggle-btn.on { border-color: #6bd08a; color: #b9f2c8; }
     #mic-toggle-btn.muted { border-color: var(--red-suit); color: #ffb4a8; }
+
+    /* ---------- Spades: redo-last-trick button (icon-only, with a small count badge) ---------- */
+    #spades-redo-btn {
+      position: absolute;
+      top: 92px;
+      left: 20px;
+      z-index: 25;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      line-height: 1;
+      border-radius: 50%;
+      border: 1.5px solid var(--brass);
+      background: rgba(10, 20, 14, 0.8);
+      color: var(--cream);
+      cursor: pointer;
+    }
+    #spades-redo-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+    .redo-badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--red-suit);
+      border: 2px solid var(--cream);
+      color: var(--cream);
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: 11px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    @media (max-width: 700px) {
+      #spades-redo-btn {
+        top: 115px;
+        left: 05vw;
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+      }
+      .redo-badge {
+        width: 16px;
+        height: 16px;
+        font-size: 9px;
+        top: -4px;
+        right: -4px;
+      }
+    }
 
     .full-overlay {
       position: fixed;
@@ -1133,7 +1237,7 @@
         box-shadow: -1 6px 16px rgba(0,0,0,.55);
       }
       #spades-hand { position: absolute; inset: 0; pointer-events: auto; bottom: 0; }
-      #spades-your-status { bottom: 141px; font-size: 12px; padding: 3px 10px; }
+      #spades-your-status { bottom: 145px; font-size: 12px; padding: 3px 10px; }
       #spades-target-watermark { font-size: 30px; letter-spacing: 3px; }
 
       #spades-table-cards .card {
@@ -1246,6 +1350,10 @@
          behind every other element so it never blocks play. -->
     <div id="spades-target-watermark" class="table-watermark"></div>
 
+    <!-- Human-only "redo last trick" -- casual/forgiving feature, not
+         a fairness feature. Up to 3 uses per round. -->
+    <button id="spades-redo-btn" title="Rewind and replay your last trick (up to 3 per round)">↺<span id="spades-redo-badge" class="redo-badge">3</span></button>
+
     <div id="spades-round-panel" class="panel">
       <p class="panel-label">Round</p>
       <p class="panel-value" id="spades-round-panel-text">1</p>
@@ -1258,9 +1366,8 @@
 
     <div id="spades-score-panel" class="panel">
       <p class="panel-label" id="spades-score-panel-label">Match Score</p>
-      <p class="score-panel-roster" id="spades-score-panel-roster"></p>
       <hr class="score-panel-divider">
-      <p class="panel-value" id="spades-score-panel-text">0 - 0</p>
+      <div class="score-chips" id="spades-score-chips"></div>
     </div>
 
     <!-- Bot seats -->
@@ -1525,8 +1632,8 @@
 <div id="spades-menu-overlay" class="full-overlay">
   <h1 class="menu-title">♠ Spades</h1>
   <p class="menu-subtitle">Trump is always spades</p>
-  <button id="spades-play-individual" class="menu-btn primary">Play vs Bots · Individual</button>
-  <button id="spades-play-team" class="menu-btn primary">Play vs Bots · Team</button>
+  <button id="spades-play-individual" class="menu-btn primary">Play - Individual</button>
+  <button id="spades-play-team" class="menu-btn primary">Play - Team</button>
   <button id="spades-how-to-play" class="menu-btn">How to Play</button>
   <button id="spades-back-to-games" class="menu-btn small" style="margin-top:14px;">← Choose a different game</button>
 </div>
@@ -2372,6 +2479,14 @@
   // online) is in progress, and the player is asked to confirm before
   // actually leaving. Confirming reloads the page (back to the main
   // menu); cancelling keeps them in the game exactly where they were.
+  //
+  // Outside a game, the physical/browser back button instead steps up
+  // one level through the menus (a sub-screen like Friends closes back
+  // to its main menu; a main menu steps back to the game-select
+  // screen) so back always does *something* useful instead of nothing.
+  // At the true root (game-select-overlay) there's nothing left to
+  // close, so that press is allowed to fall through to the platform's
+  // normal back behavior (minimizing/exiting the app).
 
   let inGame = false;
 
@@ -2384,24 +2499,89 @@
     inGame = false;
   }
 
-  window.addEventListener("popstate", () => {
-    if (!inGame) return;
+  const MENU_SUB_SCREENS_UNDER_COURT_PIECE = [
+    "account-overlay", "friends-overlay", "settings-overlay",
+    "statistics-overlay", "how-to-play-overlay", "lobby-overlay"
+  ];
+  const MENU_SUB_SCREENS_UNDER_SPADES = ["spades-how-to-play-overlay"];
 
-    const shouldExit = window.confirm("Exit the game and return to the menu?");
-    if (shouldExit) {
-      if (currentMode === "online" && socket && socket.readyState === WebSocket.OPEN) {
-        // Give up the seat for good -- otherwise the server's normal
-        // reconnect window would let a later connection (including a
-        // future Quick Match) auto-drop the player right back into
-        // this same room.
-        send({ type: "leave_room" });
-      }
-      window.location.reload();
-    } else {
-      // Cancel the back navigation by re-arming a history entry so the
-      // next back press is caught by this same handler again.
-      history.pushState({ courtPiece: "game" }, "", location.href);
+  function isOverlayVisible(id) {
+    const el = document.getElementById(id);
+    return !!el && el.classList.contains("visible");
+  }
+  function showOverlay(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add("visible");
+  }
+  function hideOverlay(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove("visible");
+  }
+
+  // Returns true if it closed something (caller should re-arm history
+  // so the *next* back press is caught too), or false once we're
+  // already at the true root screen with nothing left to close.
+  function handleMenuBackPress() {
+    const openSub = MENU_SUB_SCREENS_UNDER_COURT_PIECE.find(isOverlayVisible)
+                  || MENU_SUB_SCREENS_UNDER_SPADES.find(isOverlayVisible);
+
+    if (openSub) {
+      hideOverlay(openSub);
+      showOverlay(MENU_SUB_SCREENS_UNDER_SPADES.includes(openSub) ? "spades-menu-overlay" : "menu-overlay");
+      return true;
     }
+
+    if (isOverlayVisible("menu-overlay")) {
+      hideOverlay("menu-overlay");
+      showOverlay("game-select-overlay");
+      return true;
+    }
+
+    if (isOverlayVisible("spades-menu-overlay")) {
+      hideOverlay("spades-menu-overlay");
+      showOverlay("game-select-overlay");
+      return true;
+    }
+
+    return false; // already at game-select-overlay -- nothing more to close
+  }
+
+  window.addEventListener("popstate", () => {
+    if (inGame) {
+      const shouldExit = window.confirm("Exit the game and return to the menu?");
+      if (shouldExit) {
+        if (currentMode === "online" && socket && socket.readyState === WebSocket.OPEN) {
+          // Give up the seat for good -- otherwise the server's normal
+          // reconnect window would let a later connection (including a
+          // future Quick Match) auto-drop the player right back into
+          // this same room.
+          send({ type: "leave_room" });
+        }
+        if (currentMode === "spades" && typeof clearSpadesSave === "function") {
+          // A deliberate "yes, exit" should actually reach the menu --
+          // otherwise the auto-resume feature would just reload
+          // straight back into this same game. Anything OTHER than
+          // this explicit confirm (closing the tab/app, force-quit)
+          // still leaves the save in place to resume from later.
+          clearSpadesSave();
+        }
+        window.location.reload();
+      } else {
+        // Cancel the back navigation by re-arming a history entry so the
+        // next back press is caught by this same handler again.
+        history.pushState({ courtPiece: "game" }, "", location.href);
+      }
+      return;
+    }
+
+    const handled = handleMenuBackPress();
+    if (handled) {
+      // Re-arm so the next back press is caught too -- if we're not at
+      // the root yet, there's always another level to step up through.
+      history.pushState({ courtPiece: "menu" }, "", location.href);
+    }
+    // If not handled, we're at game-select-overlay already -- don't
+    // re-arm, so a further back press is free to exit/minimize the app.
   });
 
   // Prime one history entry up front so the very first back press,
@@ -2439,6 +2619,113 @@
     el.style.top = y + "px";
   }
 
+  // ---------------- Play-a-card gesture (tap OR hold-and-swipe) ----------------
+  // A plain tap still plays the card exactly as before. Additionally,
+  // pressing and holding a card lets you drag it up or down (either
+  // direction) with a visual lift-and-follow, and releasing -- from a
+  // tap or from a swipe -- plays it. Only a genuinely cancelled
+  // gesture (pointercancel, e.g. an interrupted touch) backs out
+  // without playing. Used by all three hands: bots-mode Court Piece,
+  // online Court Piece, and Spades.
+  function attachPlayGesture(el, playFn) {
+    const CONFIRM_THRESHOLD = 55; // px swiped UP (toward the table center) that confirms the play
+    const TAP_THRESHOLD = 6;      // px of movement below which it still counts as a plain tap
+    const LIFT_RANGE = 90;        // px the card visually follows the finger while dragging
+
+    el.style.touchAction = "none"; // let this element own vertical drags instead of the page scrolling
+    el.style.userSelect = "none";
+
+    let pointerId = null;
+    let startY = 0;
+    let dragging = false;
+
+    function setTransform(deltaY, animated) {
+      el.style.transition = animated ? "transform 0.18s ease" : "";
+      if (deltaY === 0) {
+        el.style.transform = "";
+        return;
+      }
+      const clamped = Math.max(-LIFT_RANGE, Math.min(LIFT_RANGE, deltaY));
+      const lifted = Math.abs(deltaY) > TAP_THRESHOLD;
+      el.style.transform = `translateY(${clamped}px)${lifted ? " scale(1.08)" : ""}`;
+    }
+
+    function reset(animated) {
+      setTransform(0, animated);
+      el.style.zIndex = el.dataset.baseZ || "";
+      pointerId = null;
+      dragging = false;
+      if (animated) setTimeout(() => { el.style.transition = ""; }, 200);
+    }
+
+    el.addEventListener("pointerdown", (e) => {
+      if (pointerId !== null) return;
+      pointerId = e.pointerId;
+      startY = e.clientY;
+      dragging = false;
+      el.dataset.baseZ = el.style.zIndex || "";
+      try { el.setPointerCapture(pointerId); } catch (err) {}
+    });
+
+    el.addEventListener("pointermove", (e) => {
+      if (e.pointerId !== pointerId) return;
+      const deltaY = e.clientY - startY;
+      if (Math.abs(deltaY) > TAP_THRESHOLD) dragging = true;
+      setTransform(deltaY, false);
+      el.style.zIndex = 999;
+    });
+
+    el.addEventListener("pointerup", (e) => {
+      if (e.pointerId !== pointerId) return;
+      try { el.releasePointerCapture(pointerId); } catch (err) {}
+      const deltaY = e.clientY - startY;
+
+      if (!dragging) {
+        // A plain tap -- always plays, same as before.
+        reset(false);
+        playFn();
+        return;
+      }
+
+      if (deltaY <= -CONFIRM_THRESHOLD) {
+        // Swiped up far enough toward the center of the table -- play it.
+        reset(false);
+        playFn();
+      } else {
+        // Didn't reach the table, or was swiped back down toward the
+        // deck -- snap back to hand instead of playing.
+        reset(true);
+      }
+    });
+
+    el.addEventListener("pointercancel", () => reset(true));
+  }
+
+  // ---------------- Your-turn highlighting (spacing, not color) ----------------
+  // While it's your turn, cards you can legally play get extra
+  // breathing room separating them from the rest of the fan, instead
+  // of a border glow or dimming the others. Since a sorted hand keeps
+  // same-suit cards contiguous, the legal group is always one
+  // unbroken run -- this just widens the gap at each point the
+  // legal/illegal boundary is crossed. Returns one cumulative x-offset
+  // per card index to add on top of the normal i*gap spacing.
+  function computeHighlightOffsets(hand, isPlayableFn, myTurn, extraGap) {
+    const offsets = new Array(hand.length).fill(0);
+    if (!myTurn) return offsets;
+
+    let running = 0;
+    let prevPlayable = null;
+    for (let i = 0; i < hand.length; i++) {
+      const playable = isPlayableFn(hand[i]);
+      if (i > 0 && prevPlayable !== null && playable !== prevPlayable) {
+        running += extraGap;
+      }
+      offsets[i] = running;
+      prevPlayable = playable;
+    }
+    return offsets;
+  }
+
   // ---------------- Rendering ----------------
 
   function renderHand() {
@@ -2472,6 +2759,10 @@
 
     const baseY = mobile ? window.innerHeight - 138 : 575;
 
+    const myTurn = acceptingHumanClick && turnPlayer === 0;
+    const extraGap = mobile ? 16 : 26;
+    const offsets = computeHighlightOffsets(hand, isValidHumanCard, myTurn, extraGap);
+
     hand.forEach((card, i) => {
 
       const el = createCardFace(card);
@@ -2484,11 +2775,11 @@
 
       const y = baseY + curve * 2;
 
-      positionAbs(el, startX + i * gap, y);
+      positionAbs(el, startX + i * gap + offsets[i], y);
 
       el.style.zIndex = i;
 
-      el.addEventListener("click", () => onHumanCardClick(card, el));
+      attachPlayGesture(el, () => onHumanCardClick(card, el));
 
       handEl.appendChild(el);
 
@@ -2807,6 +3098,8 @@
       acceptingHumanClick = false;
       setTimeout(botPlay, BOT_THINK_MS);
     }
+
+    renderHand(); // refreshes the playable-card highlight for the new turn
   }
 
   function leadSuitOfTrick() {
@@ -2999,28 +3292,30 @@
       showRoundBanner(`Team ${winningTeam} swept the round! Challenge successful.`);
       game.rotateDealer(true);
       team1WonRound = winningTeam === 1;
-    } else {
-      let courtMsg = "";
-      if (team1 === 13) {
-          stats.courts++;
-          game.team1Score += 1;
-          courtMsg = "Team 1 made a court! ";
-      }
-      else if (team2 === 13) {
-          stats.courts++;
-          game.team2Score += 1;
-          courtMsg = "Team 2 made a court! ";
-      }
+    } else if (team1 === 13 || team2 === 13) {
+      // Natural court -- one side swept all 13 tricks without anyone
+      // ever declaring a challenge. This is ONE point, not the court
+      // bonus plus a separate "won the round" point (that double-count
+      // was the bug) -- and it always hands the deal to the dealer's
+      // own partner, the same way a failed challenge from the
+      // dealer's own team would, regardless of which team held trump.
+      stats.courts++;
+      const courtTeam = team1 === 13 ? 1 : 2;
+      if (courtTeam === 1) game.team1Score += 1; else game.team2Score += 1;
+      team1WonRound = courtTeam === 1;
 
+      showRoundBanner(`Team ${courtTeam} made a court!`);
+      game.dealer = (game.dealer + 2) % 4;
+    } else {
       const trumpSucceeded = game.trumpTeam === 1 ? team1 >= 8 : team2 >= 8;
 
       let msg;
       if (game.trumpTeam === 1) {
         msg = trumpSucceeded ? "Team 1 won the round!" : "Team 1 failed -- Team 2 wins the round!";
-        if (!trumpSucceeded) game.team2Score += 1;
+        if (trumpSucceeded) game.team1Score += 1; else game.team2Score += 1;
       } else {
         msg = trumpSucceeded ? "Team 2 won the round!" : "Team 2 failed -- Team 1 wins the round!";
-        if (!trumpSucceeded) game.team1Score += 1;
+        if (trumpSucceeded) game.team2Score += 1; else game.team1Score += 1;
       }
 
       // Team 1 is always the human's team (seat 0) -- this is the one
@@ -3030,7 +3325,7 @@
           (game.trumpTeam === 1 && trumpSucceeded) ||
           (game.trumpTeam === 2 && !trumpSucceeded);
 
-      showRoundBanner(courtMsg + msg);
+      showRoundBanner(msg);
       game.rotateDealer(trumpSucceeded);
     }
 
@@ -4113,14 +4408,16 @@
     const baseY = mobile ? window.innerHeight - 138 : 600;
 
     const canPlay = state.phase === "trick" && state.turnPlayer === mySeat;
+    const extraGap = mobile ? 16 : 20;
+    const offsets = computeHighlightOffsets(hand, (c) => isValidOnlineCard(state, c), canPlay, extraGap);
 
     hand.forEach((card, i) => {
       const el = createCardFace(card);
       el.classList.add("hand-card");
-      positionAbs(el, startX + i * gap, baseY);
+      positionAbs(el, startX + i * gap + offsets[i], baseY);
       el.style.zIndex = i;
       if (canPlay) {
-        el.addEventListener("click", () => onOnlineCardClick(card));
+        attachPlayGesture(el, () => onOnlineCardClick(card));
       } else {
         el.style.cursor = "default";
       }
@@ -4338,16 +4635,20 @@
     });
   }
 
+  function isValidOnlineCard(state, card) {
+    const leadSuit = state.currentTrick.length === 0 ? null : state.currentTrick[0].card.suit;
+    if (leadSuit === null) return true;
+    const hasLead = state.hand.some((c) => c.suit === leadSuit);
+    if (hasLead) return card.suit === leadSuit;
+    return true;
+  }
+
   function onOnlineCardClick(card) {
     if (!latestState) return;
 
-    const leadSuit = latestState.currentTrick.length === 0 ? null : latestState.currentTrick[0].card.suit;
-    if (leadSuit !== null) {
-      const hasLead = latestState.hand.some((c) => c.suit === leadSuit);
-      if (hasLead && card.suit !== leadSuit) {
-        showFollowSuitToast();
-        return;
-      }
+    if (!isValidOnlineCard(latestState, card)) {
+      showFollowSuitToast();
+      return;
     }
 
     SoundEngine.cardClick();
@@ -4396,7 +4697,7 @@
   const spadesRoundPanelText = document.getElementById("spades-round-panel-text");
   const spadesStatusPanelText = document.getElementById("spades-status-panel-text");
   const spadesScorePanelLabel = document.getElementById("spades-score-panel-label");
-  const spadesScorePanelText = document.getElementById("spades-score-panel-text");
+  const spadesScoreChipsEl = document.getElementById("spades-score-chips");
 
   const spadesBidOverlay = document.getElementById("spades-bid-overlay");
   const spadesBidSelect = document.getElementById("spades-bid-select");
@@ -4405,6 +4706,8 @@
 
   const spadesRoundBannerEl = document.getElementById("spades-round-banner");
   const spadesFollowSuitToastEl = document.getElementById("spades-follow-suit-toast");
+  const spadesRedoBtn = document.getElementById("spades-redo-btn");
+  if (spadesRedoBtn) spadesRedoBtn.addEventListener("click", () => spadesUndoLastTrick());
 
   const spadesSummaryModal = document.getElementById("spades-round-summary-modal");
   const spadesSummaryTitle = document.getElementById("spades-summary-title");
@@ -4480,17 +4783,79 @@
   let spadesAcceptingHumanClick = false;
   let spadesBiddingQueue = [];
 
+  // ---------------- Redo (undo last trick), human-only, casual/cheat feature ----------------
+  // A rolling snapshot taken right before each trick begins, kept up
+  // to 3 deep. Redo pops the most recent one and restores it, so the
+  // player can rewind and replay up to their last 3 completed tricks.
+  // Charges refill every round -- this is deliberately forgiving
+  // ("cheating" by design) to keep the human player from feeling
+  // punished by a single misclick.
+  const SPADES_REDO_CHARGES_PER_ROUND = 3;
+  let spadesHistory = [];
+  let spadesRedosLeft = SPADES_REDO_CHARGES_PER_ROUND;
+
+  // ---------------- Resume-in-progress (bots-mode Spades only) ----------------
+  // Closing the app/tab mid-game shouldn't lose progress -- the whole
+  // round-in-progress state is saved to localStorage at every
+  // meaningful checkpoint (deal, bid, card played, trick resolved) and
+  // auto-restored on next load, dropping the player right back into
+  // the same room instead of the menu. Cleared only once the match is
+  // actually won (not on a deliberate exit -- that should resume too).
+  let spadesPendingBidIdx = null;         // seat currently being prompted to bid, or null
+  let spadesPendingSummarySnapshot = null; // round-summary modal content, while it's showing
+
+  function saveSpadesState() {
+    try {
+      const snapshot = {
+        mode: spadesGame.mode,
+        dealer: spadesGame.dealer,
+        roundNumber: spadesGame.roundNumber,
+        spadesBroken: spadesGame.spadesBroken,
+        team1Score: spadesGame.team1Score,
+        team2Score: spadesGame.team2Score,
+        team1Bags: spadesGame.team1Bags,
+        team2Bags: spadesGame.team2Bags,
+        individualScores: spadesGame.individualScores.slice(),
+        individualBags: spadesGame.individualBags.slice(),
+        players: spadesGame.players.map((p) => ({
+          name: p.name, isHuman: p.isHuman,
+          hand: p.hand.map((c) => ({ ...c })),
+          bid: p.bid, isNil: p.isNil, tricksWon: p.tricksWon
+        })),
+        turnPlayer: spadesTurnPlayer,
+        currentTrick: spadesCurrentTrick.map((e) => ({ playerIndex: e.playerIndex, card: { ...e.card } })),
+        biddingQueue: spadesBiddingQueue.slice(),
+        pendingBidIdx: spadesPendingBidIdx,
+        history: spadesHistory.map((s) => ({
+          turnPlayer: s.turnPlayer,
+          spadesBroken: s.spadesBroken,
+          players: s.players.map((sp) => ({ hand: sp.hand.map((c) => ({ ...c })), tricksWon: sp.tricksWon }))
+        })),
+        redosLeft: spadesRedosLeft,
+        pendingSummary: spadesPendingSummarySnapshot
+      };
+      localStorage.setItem("spadesSavedGame", JSON.stringify(snapshot));
+    } catch (e) { /* storage unavailable/full -- resume just won't work this session */ }
+  }
+
+  function clearSpadesSave() {
+    try { localStorage.removeItem("spadesSavedGame"); } catch (e) {}
+  }
+
   function spadesTeamOf(idx) { return idx % 2 === 0 ? 1 : 2; }
 
   function spadesResetRound() {
     spadesGame.spadesBroken = false;
     spadesCurrentTrick = [];
+    spadesHistory = [];
+    spadesRedosLeft = SPADES_REDO_CHARGES_PER_ROUND;
     for (const p of spadesGame.players) {
       p.hand = [];
       p.bid = null;
       p.isNil = false;
       p.tricksWon = 0;
     }
+    renderSpadesRedoButton();
   }
 
   // ---------------- Intro / start ----------------
@@ -4544,6 +4909,9 @@
 
     // Bidding order: player left of the dealer bids first, clockwise.
     spadesBiddingQueue = [0, 1, 2, 3].map((i) => (spadesGame.dealer + 1 + i) % 4);
+    spadesPendingBidIdx = null;
+    spadesPendingSummarySnapshot = null;
+    saveSpadesState();
     spadesRunNextBid();
   }
 
@@ -4578,6 +4946,9 @@
   }
 
   function showSpadesBidOverlay(idx) {
+    spadesPendingBidIdx = idx;
+    saveSpadesState();
+
     spadesBidSelect.innerHTML = "";
     for (let n = 1; n <= 13; n++) {
       const opt = document.createElement("option");
@@ -4589,11 +4960,13 @@
 
     spadesBidNilBtn.onclick = () => {
       spadesBidOverlay.classList.remove("visible");
+      spadesPendingBidIdx = null;
       spadesApplyBid(idx, 0);
       spadesRunNextBid();
     };
     spadesBidConfirmBtn.onclick = () => {
       spadesBidOverlay.classList.remove("visible");
+      spadesPendingBidIdx = null;
       spadesApplyBid(idx, parseInt(spadesBidSelect.value, 10));
       spadesRunNextBid();
     };
@@ -4605,13 +4978,71 @@
     player.isNil = bid === 0;
     renderSpadesSeats();
     showSpadesBanner(`${player.name} bids ${bid === 0 ? "Nil" : bid}`);
+    saveSpadesState();
   }
 
   // ---------------- Trick play ----------------
 
   function spadesBeginTrickPlay() {
     spadesTurnPlayer = (spadesGame.dealer + 1) % 4;
+    spadesSnapshotBeforeTrick();
     spadesAdvanceTurn();
+  }
+
+  // Captures exactly what's needed to rewind to "right before this
+  // trick started": each hand, each tricksWon count, and whether
+  // spades had been broken yet. Keeps only the most recent 3.
+  function spadesSnapshotBeforeTrick() {
+    spadesHistory.push({
+      turnPlayer: spadesTurnPlayer,
+      spadesBroken: spadesGame.spadesBroken,
+      players: spadesGame.players.map((p) => ({
+        hand: p.hand.map((c) => ({ ...c })),
+        tricksWon: p.tricksWon
+      }))
+    });
+    if (spadesHistory.length > SPADES_REDO_CHARGES_PER_ROUND) spadesHistory.shift();
+    renderSpadesRedoButton();
+  }
+
+  // Rewinds to the start of the most recently completed trick --
+  // discards whatever was played for it (human and bots alike) so it
+  // can be replayed. Only usable between tricks (empty table).
+  function spadesUndoLastTrick() {
+    if (spadesRedosLeft <= 0 || spadesHistory.length === 0) return;
+    if (spadesCurrentTrick.length > 0) return; // mid-trick -- nothing sane to rewind to
+
+    const snapshot = spadesHistory.pop();
+    spadesRedosLeft -= 1;
+
+    spadesTurnPlayer = snapshot.turnPlayer;
+    spadesGame.spadesBroken = snapshot.spadesBroken;
+    snapshot.players.forEach((s, i) => {
+      spadesGame.players[i].hand = s.hand.map((c) => ({ ...c }));
+      spadesGame.players[i].tricksWon = s.tricksWon;
+    });
+
+    spadesCurrentTrick = [];
+    spadesTableCardsEl.innerHTML = "";
+
+    renderSpadesHand();
+    renderSpadesSeats();
+    renderSpadesHUD();
+    renderSpadesRedoButton();
+
+    showSpadesBanner(`Redo used -- replaying that trick (${spadesRedosLeft} left)`);
+
+    spadesAdvanceTurn();
+  }
+
+  function renderSpadesRedoButton() {
+    const btn = document.getElementById("spades-redo-btn");
+    const badge = document.getElementById("spades-redo-badge");
+    if (!btn) return;
+    const usable = spadesRedosLeft > 0 && spadesHistory.length > 0 && spadesCurrentTrick.length === 0;
+    if (badge) badge.textContent = spadesRedosLeft;
+    btn.title = `Rewind and replay your last trick (${spadesRedosLeft} left this round)`;
+    btn.disabled = !usable;
   }
 
   function spadesLeadSuit() {
@@ -4641,6 +5072,7 @@
       spadesAcceptingHumanClick = false;
       setTimeout(spadesBotPlay, BOT_THINK_MS);
     }
+    renderSpadesHand(); // refreshes the playable-card highlight for the new turn
   }
 
   function spadesIsValidHumanCard(card) {
@@ -4701,12 +5133,18 @@
 
     spadesCurrentTrick.push({ playerIndex, card, el });
     renderSpadesHUD();
+    renderSpadesRedoButton(); // disables Redo once a card's been played this trick
 
     spadesTurnPlayer = (playerIndex + 1) % 4;
 
     if (spadesCurrentTrick.length === 4) {
       setTimeout(spadesFinishTrick, TRICK_HOLD_MS);
     } else {
+      // Only save with fewer than 4 cards down -- once the trick is
+      // full it's about to resolve on its own (see spadesFinishTrick),
+      // and that's a cleaner, safer point to persist from than mid-
+      // resolution.
+      saveSpadesState();
       spadesAdvanceTurn();
     }
   }
@@ -4738,6 +5176,8 @@
         }
 
         spadesTurnPlayer = winnerIndex;
+        spadesSnapshotBeforeTrick();
+        saveSpadesState();
         spadesAdvanceTurn();
       }, 300);
     }, TRICK_FLY_MS);
@@ -4829,8 +5269,16 @@
       ? (spadesGame.team1Score >= SPADES_TARGET_SCORE || spadesGame.team2Score >= SPADES_TARGET_SCORE)
       : spadesGame.individualScores.some((s) => s >= SPADES_TARGET_SCORE);
 
+    spadesPendingSummarySnapshot = {
+      title: spadesSummaryTitle.textContent,
+      bodyHTML: spadesSummaryBody.innerHTML,
+      matchOver
+    };
+    saveSpadesState();
+
     spadesSummaryContinueBtn.onclick = () => {
       spadesSummaryModal.classList.remove("visible");
+      spadesPendingSummarySnapshot = null;
       if (matchOver) {
         spadesShowMatchOver();
       } else {
@@ -4859,6 +5307,11 @@
     spadesMatchOverTitle.textContent = title;
     spadesMatchOverSub.textContent = sub;
     spadesMatchOverModal.classList.add("visible");
+
+    // The match is genuinely decided now -- this is the one point
+    // where the saved in-progress game should actually go away rather
+    // than resume.
+    clearSpadesSave();
   }
 
   spadesMatchOverPlayAgainBtn.addEventListener("click", () => {
@@ -4894,14 +5347,18 @@
     }
     const baseY = mobile ? window.innerHeight - 138 : 575;
 
+    const myTurn = spadesAcceptingHumanClick && spadesTurnPlayer === 0;
+    const extraGap = mobile ? 16 : 26;
+    const offsets = computeHighlightOffsets(hand, spadesIsValidHumanCard, myTurn, extraGap);
+
     hand.forEach((card, i) => {
       const el = createCardFace(card);
       el.classList.add("hand-card");
       const center = (hand.length - 1) / 2;
       const curve = Math.abs(i - center);
-      positionAbs(el, startX + i * gap, baseY + curve * 2);
+      positionAbs(el, startX + i * gap + offsets[i], baseY + curve * 2);
       el.style.zIndex = i;
-      el.addEventListener("click", () => onSpadesHumanCardClick(card, el));
+      attachPlayGesture(el, () => onSpadesHumanCardClick(card, el));
       spadesHandEl.appendChild(el);
     });
   }
@@ -4960,20 +5417,34 @@
     spadesRoundPanelText.textContent = `Round ${spadesGame.roundNumber}`;
     spadesStatusPanelText.textContent = spadesGame.spadesBroken ? "Broken" : "Not Broken";
 
-    const rosterEl = document.getElementById("spades-score-panel-roster");
+    renderSpadesScoreChips();
+    updateSpadesTargetWatermark();
+  }
 
-    if (spadesGame.mode === "team") {
-      const team1Names = [0, 2].map((i) => spadesGame.players[i].name).join(" & ");
-      const team2Names = [1, 3].map((i) => spadesGame.players[i].name).join(" & ");
-      if (rosterEl) rosterEl.textContent = `${team1Names}  vs  ${team2Names}`;
-      spadesScorePanelText.textContent = `${spadesGame.team1Score} - ${spadesGame.team2Score}`;
-    } else {
-      const names = spadesGame.players.map((p) => p.name).join(" · ");
-      if (rosterEl) rosterEl.textContent = names;
-      spadesScorePanelText.textContent = spadesGame.individualScores.join(" · ");
+  // Colored score "chips" instead of a plain number row -- one per
+  // team in Team mode (labelled "Team 1"/"Team 2"), one per player in
+  // Individual mode (labelled with their name), alternating colors so
+  // it's clear at a glance without a separate roster line above.
+  function renderSpadesScoreChips() {
+    if (!spadesScoreChipsEl) return;
+    spadesScoreChipsEl.innerHTML = "";
+
+    function makeChip(colorClass, value, subLabel) {
+      const chip = document.createElement("div");
+      chip.className = `score-chip ${colorClass}`;
+      chip.innerHTML = `<span class="score-chip-value">${value}</span><span class="score-chip-sub">${subLabel}</span>`;
+      return chip;
     }
 
-    updateSpadesTargetWatermark();
+    if (spadesGame.mode === "team") {
+      spadesScoreChipsEl.appendChild(makeChip("score-chip-a", spadesGame.team1Score, "Team 1"));
+      spadesScoreChipsEl.appendChild(makeChip("score-chip-b", spadesGame.team2Score, "Team 2"));
+    } else {
+      spadesGame.players.forEach((p, i) => {
+        const colorClass = i % 2 === 0 ? "score-chip-a" : "score-chip-b";
+        spadesScoreChipsEl.appendChild(makeChip(colorClass, spadesGame.individualScores[i], p.name));
+      });
+    }
   }
 
   // Faint "TARGET <score>" text painted on the felt -- visible in both
@@ -5001,6 +5472,100 @@
     spadesStage.style.transform = `translate(-50%, -50%) scale(${scale})`;
   }
   window.addEventListener("resize", fitSpadesStage);
+
+  // ---------------- Boot: resume an in-progress Spades game if one exists ----------------
+
+  function trySpadesResume() {
+    let saved;
+    try { saved = JSON.parse(localStorage.getItem("spadesSavedGame") || "null"); } catch (e) { saved = null; }
+    if (!saved) return false;
+
+    spadesGame.mode = saved.mode;
+    spadesGame.dealer = saved.dealer;
+    spadesGame.roundNumber = saved.roundNumber;
+    spadesGame.spadesBroken = saved.spadesBroken;
+    spadesGame.team1Score = saved.team1Score;
+    spadesGame.team2Score = saved.team2Score;
+    spadesGame.team1Bags = saved.team1Bags;
+    spadesGame.team2Bags = saved.team2Bags;
+    spadesGame.individualScores = saved.individualScores.slice();
+    spadesGame.individualBags = saved.individualBags.slice();
+    saved.players.forEach((sp, i) => {
+      spadesGame.players[i].name = sp.name;
+      spadesGame.players[i].isHuman = sp.isHuman;
+      spadesGame.players[i].hand = sp.hand.map((c) => ({ ...c }));
+      spadesGame.players[i].bid = sp.bid;
+      spadesGame.players[i].isNil = sp.isNil;
+      spadesGame.players[i].tricksWon = sp.tricksWon;
+    });
+
+    spadesTurnPlayer = saved.turnPlayer;
+    spadesBiddingQueue = saved.biddingQueue.slice();
+    spadesPendingBidIdx = saved.pendingBidIdx;
+    spadesHistory = saved.history.map((s) => ({
+      turnPlayer: s.turnPlayer,
+      spadesBroken: s.spadesBroken,
+      players: s.players.map((sp) => ({ hand: sp.hand.map((c) => ({ ...c })), tricksWon: sp.tricksWon }))
+    }));
+    spadesRedosLeft = saved.redosLeft;
+
+    // Enter the Spades view the same way startSpadesIntro() does,
+    // minus dealing a fresh round -- we already have one in progress.
+    markInGame();
+    currentMode = "spades";
+    spadesScorePanelLabel.textContent = spadesGame.mode === "team" ? "Match Score" : "Scores";
+    micToggleBtn.style.display = "none";
+
+    document.getElementById("game-select-overlay").classList.remove("visible");
+    spadesIntroOverlay.classList.remove("visible"); // starts "visible" in the markup -- resume must hide it too, or it sits on top of the resumed board and blocks play
+    spadesStageWrap.style.display = "flex";
+    fitSpadesStage();
+
+    renderSpadesHUD();
+    renderSpadesSeats();
+    renderSpadesHand();
+
+    // Rebuild any cards already down on the table for the in-progress trick.
+    spadesTableCardsEl.innerHTML = "";
+    spadesCurrentTrick = saved.currentTrick.map((entry) => {
+      const el = createCardFace(entry.card);
+      el.classList.add("table-card");
+      const pos = getPlayPos()[entry.playerIndex];
+      positionAbs(el, pos.x, pos.y);
+      spadesTableCardsEl.appendChild(el);
+      return { playerIndex: entry.playerIndex, card: entry.card, el };
+    });
+
+    renderSpadesRedoButton();
+    showSpadesBanner("Welcome back -- resuming your game");
+
+    if (saved.pendingSummary) {
+      spadesSummaryTitle.textContent = saved.pendingSummary.title;
+      spadesSummaryBody.innerHTML = saved.pendingSummary.bodyHTML;
+      spadesSummaryModal.classList.add("visible");
+      spadesSummaryContinueBtn.onclick = () => {
+        spadesSummaryModal.classList.remove("visible");
+        spadesPendingSummarySnapshot = null;
+        if (saved.pendingSummary.matchOver) {
+          spadesShowMatchOver();
+        } else {
+          spadesGame.dealer = (spadesGame.dealer + 1) % 4;
+          spadesGame.roundNumber += 1;
+          spadesStartRound();
+        }
+      };
+    } else if (spadesPendingBidIdx !== null) {
+      showSpadesBidOverlay(spadesPendingBidIdx);
+    } else if (spadesBiddingQueue.length > 0) {
+      spadesRunNextBid();
+    } else {
+      spadesAdvanceTurn();
+    }
+
+    return true;
+  }
+
+  trySpadesResume();
 
 </script>
 </body>

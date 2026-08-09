@@ -477,19 +477,28 @@ function resolveRoundEnd(room) {
     if (winningTeam === 1) g.team1Score += 1; else g.team2Score += 1;
     room.broadcastEvent(`Team ${winningTeam} swept the round! Challenge successful.`);
     g.rotateDealer(true);
+  } else if (team1 === 13 || team2 === 13) {
+    // Natural court -- one side swept all 13 tricks without anyone
+    // ever declaring a challenge. One point only (not a court bonus
+    // stacked on top of a separate "won the round" point -- that
+    // double-count was the bug), and it always hands the deal to the
+    // dealer's own partner, same as a failed challenge from the
+    // dealer's own team would, regardless of which team held trump.
+    const courtTeam = team1 === 13 ? 1 : 2;
+    if (courtTeam === 1) g.team1Score += 1; else g.team2Score += 1;
+
+    room.broadcastEvent(`Team ${courtTeam} made a court!`);
+    g.dealer = (g.dealer + 2) % 4;
   } else {
     let msg = "";
-    if (team1 === 13) { g.team1Score += 1; msg = "Team 1 made a court! "; }
-    else if (team2 === 13) { g.team2Score += 1; msg = "Team 2 made a court! "; }
-
     const trumpSucceeded = g.trumpTeam === 1 ? team1 >= 8 : team2 >= 8;
 
     if (g.trumpTeam === 1) {
-      msg += trumpSucceeded ? "Team 1 won the round!" : "Team 1 failed -- Team 2 wins the round!";
-      if (!trumpSucceeded) g.team2Score += 1;
+      msg = trumpSucceeded ? "Team 1 won the round!" : "Team 1 failed -- Team 2 wins the round!";
+      if (trumpSucceeded) g.team1Score += 1; else g.team2Score += 1;
     } else {
-      msg += trumpSucceeded ? "Team 2 won the round!" : "Team 2 failed -- Team 1 wins the round!";
-      if (!trumpSucceeded) g.team1Score += 1;
+      msg = trumpSucceeded ? "Team 2 won the round!" : "Team 2 failed -- Team 1 wins the round!";
+      if (trumpSucceeded) g.team2Score += 1; else g.team1Score += 1;
     }
 
     room.broadcastEvent(msg);
