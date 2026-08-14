@@ -54,11 +54,22 @@
       background-color: #0b5d3b;   /* felt green */
       background-image: none;
       border-radius: 28px;
-      box-shadow:
-        0 0 0 10px #2a1a0e,
-        0 0 0 14px var(--brass-dark),
-        0 30px 80px var(--shadow);
+      border: 3px solid var(--brass-bright); /* thin color accent tying the table to Court Piece's gold theme */
+      box-shadow: 0 30px 80px var(--shadow);
       overflow: hidden;
+    }
+
+    /* Applied instead of the normal uniform scale whenever the actual
+       viewport is proportionally wider than the 1000x700 design (a
+       landscape phone) -- rather than leaving empty space on both
+       sides, the table stretches to fill the full width, and the
+       border/corners/shadow are dropped so it reads as a seamless,
+       edge-to-edge table instead of a smaller framed box floating in
+       the middle of reclaimed empty space. */
+    #stage.stage-stretched, #spades-stage.stage-stretched {
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
     }
 
     /* ---------- HUD panels ---------- */
@@ -83,10 +94,8 @@
       transform: translate(-50%, -50%);
       background-color: #0b5d3b;
       border-radius: 28px;
-      box-shadow:
-        0 0 0 10px #2a1a0e,
-        0 0 0 14px var(--brass-dark),
-        0 30px 80px var(--shadow);
+      border: 3px solid #a586e0; /* thin color accent tying the table to Spades' purple theme */
+      box-shadow: 0 30px 80px var(--shadow);
       overflow: hidden;
     }
 
@@ -94,9 +103,9 @@
     #spades-status-panel { left: 50%; transform: translateX(-50%); width: 220px; }
     #spades-score-panel { right: 20px; width: 165px; }
 
-    #spades-seat-1 { left: 70px; top: 345px; }
+    #spades-seat-1 { left: 90px; top: 345px; }
     #spades-seat-2 { left: 500px; top: 55px; }
-    #spades-seat-3 { left: 930px; top: 345px; }
+    #spades-seat-3 { left: 900px; top: 345px; }
 
     /* ---------- Faint target-score watermark, painted on the felt ---------- */
     .table-watermark {
@@ -169,7 +178,7 @@
     .score-chip-a { background: linear-gradient(160deg, #3f7ee0, #1c4fae); }
     .score-chip-b { background: linear-gradient(160deg, #d1466a, #8f1f42); }
 
-    @media (max-width: 700px) {
+    @media (max-width: 480px) {
       .score-chip-value { font-size: 16px; }
       .score-chip-sub { font-size: 8px; }
       .score-chip { padding: 4px 5px; border-radius: 7px; min-width: 44px; }
@@ -187,7 +196,7 @@
     #spades-your-status {
       position: absolute;
       left: 50%;
-      bottom: 148px;
+      bottom: 144px;
       transform: translateX(-50%);
       color: var(--brass-bright);
       font-family: var(--font-body);
@@ -271,9 +280,29 @@
         display: none;
     }
 
+    /* ---------- Turn indicator: "Your Turn" / "<Name>'s Turn" ---------- */
+    .turn-indicator {
+        position: absolute;
+        left: 50%;
+        bottom: 188px;
+        transform: translateX(-50%);
+        z-index: 20;
+        background: rgba(10, 20, 14, 0.78);
+        border: 1.5px solid #6bd08a;
+        border-radius: 10px;
+        padding: 6px 14px;
+        color: #b9f2c8;
+        font-family: var(--font-body);
+        font-size: 14px;
+        font-weight: 700;
+        text-align: center;
+        white-space: nowrap;
+        display: none;
+    }
+    .turn-indicator.visible { display: block; }
 
     /* mobile adjustment */
-    @media (max-width: 700px) {
+    @media (max-width: 480px) {
 
         #targetTab {
 
@@ -297,9 +326,9 @@
       transition: filter 0.25s;
     }
 
-    #seat-1 { left: 70px; top: 345px; }
+    #seat-1 { left: 90px; top: 345px; }
     #seat-2 { left: 500px; top: 55px; }
-    #seat-3 { left: 930px; top: 345px; }
+    #seat-3 { left: 900px; top: 345px; }
 
     .seat-name {
         font-family: var(--font-display);
@@ -386,9 +415,9 @@
 
     .card {
         position: absolute;
-        width: 84px;
-        height: 118px;
-        object-fit: contain;
+        width: 70px;
+        height: 130px;
+        object-fit: fill;
         border-radius: 8px;
         box-shadow: 0 6px 16px rgba(0,0,0,.45);
         user-select: none;
@@ -403,7 +432,7 @@
     }
     .hand-card {
       cursor: pointer;
-      transition: top 0.15s ease, box-shadow 0.15s ease;
+      transition: top 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
     }
     .hand-card:hover {
         transform: translateY(-18px) scale(1.05);
@@ -411,12 +440,23 @@
         z-index: 500;
     }
 
-    /* Your-turn highlighting is done purely with extra spacing between
-       the legal-to-play cards and the rest of the fan (see the hand
-       renderers in JS) -- no border glow or dimming, cards stay plain. */
+    /* Your-turn highlighting -- a small permanent lift on cards you can
+       legally play, nothing else. No border color, no extra gap
+       between cards, and cards you can't play are left completely
+       untouched (not dimmed). */
+    .hand-card.playable {
+        transform: translateY(-14px);
+        z-index: 200;
+    }
+    .hand-card.playable:hover {
+        transform: translateY(-28px) scale(1.05);
+        z-index: 500;
+    }
 
     .table-card {
-      transition: none;
+      transition: left 0.28s ease-out, top 0.28s ease-out;
+      width: 65px;
+      height: 103px;
     }
 
     #hand, #table-cards {
@@ -478,9 +518,56 @@
       transform: translateY(-2px);
     }
 
+    .yesno-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+      transform: none;
+      background: rgba(10, 20, 14, 0.85);
+    }
+
     .suit-btn:focus-visible, .yesno-btn:focus-visible {
       outline: 3px solid var(--brass-bright);
       outline-offset: 2px;
+    }
+
+    /* ---------- Bid selection grid (replaces the old dropdown) ---------- */
+    .spades-bid-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 44px);
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .spades-bid-num-btn {
+      width: 44px;
+      height: 44px;
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1.5px solid var(--brass);
+      background: rgba(10, 20, 14, 0.85);
+      color: var(--cream);
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .spades-bid-num-btn:hover {
+      background: var(--brass-dark);
+      transform: translateY(-2px);
+    }
+    .spades-bid-num-btn.selected {
+      background: var(--brass-bright);
+      color: var(--ink);
+      border-color: var(--brass-bright);
+    }
+    .spades-bid-num-btn.nil-btn {
+      grid-column: span 2;
+      font-size: 13px;
+    }
+    @media (max-height: 500px) {
+      .spades-bid-grid { grid-template-columns: repeat(8, 45px); gap: 10px; }
+      .spades-bid-num-btn { width: 40px; height: 45px; font-size: 13px; }
+      .spades-bid-num-btn.nil-btn { font-size: 11px; }
     }
 
     #challenge-thinking {
@@ -648,7 +735,7 @@
 
     #mic-toggle-btn {
       position: fixed;
-      top: 14px;
+      top: 60px;
       left: 14px;
       z-index: 60;
       font-family: var(--font-body);
@@ -662,9 +749,9 @@
       cursor: pointer;
       display: none;
     }
-    @media (max-width: 700px) {
+    @media (max-width: 480px) {
     #mic-toggle-btn {
-      top: 115px;        /* about 1 cm lower */
+      top: 155px;        /* shifted down to clear the exit button above it */
       left: 05px;
       font-size: 10px;  /* smaller text */
       padding: 2px 5px; /* roughly half the size */
@@ -674,10 +761,40 @@
     #mic-toggle-btn.on { border-color: #6bd08a; color: #b9f2c8; }
     #mic-toggle-btn.muted { border-color: var(--red-suit); color: #ffb4a8; }
 
+    /* ---------- Exit-to-menu button, visible during any active game ---------- */
+    /* Top-left, above the mic button (Court Piece online) / redo
+       button (Spades) instead of top-right, where it used to collide
+       with the Match Score panel. */
+    #exit-game-btn {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 61;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1.5px solid var(--red-suit);
+      background: rgba(10, 20, 14, 0.8);
+      color: #ffb4a8;
+      cursor: pointer;
+      display: none;
+    }
+    #exit-game-btn.visible { display: block; }
+    @media (max-width: 480px) {
+      #exit-game-btn {
+        top: 6px;
+        left: 2vw;
+        font-size: 10px;
+        padding: 3px 8px;
+      }
+    }
+
     /* ---------- Spades: redo-last-trick button (icon-only, with a small count badge) ---------- */
     #spades-redo-btn {
       position: absolute;
-      top: 92px;
+      top: 150px;
       left: 20px;
       z-index: 25;
       width: 40px;
@@ -715,10 +832,10 @@
       align-items: center;
       justify-content: center;
     }
-    @media (max-width: 700px) {
+    @media (max-width: 480px) {
       #spades-redo-btn {
-        top: 115px;
-        left: 05vw;
+        top: 58px;
+        left: 2vw;
         width: 32px;
         height: 32px;
         font-size: 16px;
@@ -742,17 +859,28 @@
       justify-content: center;
       z-index: 200;
       padding: 20px;
+      overflow-y: auto; /* guarantees no screen's content can ever be clipped off-viewport, landscape-phone or otherwise */
     }
 
     .full-overlay.visible { display: flex; }
 
+    /* Distinct background per screen so the app doesn't read as the
+       same green felt everywhere -- the actual game tables keep the
+       felt green (that's the point of a card table), everything else
+       gets its own tint. */
+    .full-overlay.bg-game-select  { background: radial-gradient(ellipse at center, #0f3a4a 0%, #041018 100%); }
+    .full-overlay.bg-court-piece  { background: radial-gradient(ellipse at center, #123a4f 0%, #06131c 100%); }
+    .full-overlay.bg-spades       { background: radial-gradient(ellipse at center, #2a1f4a 0%, #0c0818 100%); }
+    .full-overlay.bg-lobby        { background: radial-gradient(ellipse at center, #3d2c12 0%, #140d04 100%); }
+    .full-overlay.bg-account      { background: radial-gradient(ellipse at center, #1a2f4a 0%, #050d18 100%); }
+
     .menu-title {
       font-family: var(--font-display);
-      font-size: 72px;
+      font-size: 44px;
       font-weight: 700;
       color: var(--brass-bright);
       letter-spacing: 0.03em;
-      margin: 0 0 6px;
+      margin: 0 0 2px;
       text-shadow: 0 4px 16px rgba(0,0,0,0.5);
     }
 
@@ -760,18 +888,32 @@
       font-family: var(--font-body);
       color: var(--cream);
       opacity: 0.75;
-      margin: 0 0 44px;
-      font-size: 14px;
+      margin: 0 0 16px;
+      font-size: 12px;
       letter-spacing: 0.14em;
       text-transform: uppercase;
+    }
+
+    /* Compact colorful grid for the main menu screens instead of one
+       tall stack of identical long bars -- fits a short landscape
+       viewport, and each action gets its own accent color so the
+       screen doesn't read as one flat wall of green/brass. */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(160px, 220px));
+      gap: 10px;
+      justify-content: center;
+    }
+    .menu-grid .menu-btn {
+      width: 100%;
     }
 
     .menu-btn {
       font-family: var(--font-body);
       font-weight: 600;
-      font-size: 18px;
-      padding: 16px 46px;
-      margin: 7px 0;
+      font-size: 15px;
+      padding: 12px 18px;
+      margin: 0;
       border-radius: 10px;
       border: 1.5px solid var(--brass);
       background: rgba(10, 20, 14, 0.85);
@@ -802,11 +944,25 @@
       font-size: 15px;
     }
 
+    /* Distinct accent colors, one per common action -- pick by what
+       the button does, not by position, so the same action always
+       reads the same color across screens. */
+    .menu-btn.c-blue   { background: linear-gradient(160deg, #3f7ee0, #1c4fae); border-color: #1c4fae; color: #fff; }
+    .menu-btn.c-teal   { background: linear-gradient(160deg, #1fbf9e, #0e7f68); border-color: #0e7f68; color: #fff; }
+    .menu-btn.c-pink   { background: linear-gradient(160deg, #d1466a, #8f1f42); border-color: #8f1f42; color: #fff; }
+    .menu-btn.c-purple { background: linear-gradient(160deg, #8b5fd1, #5a2f9e); border-color: #5a2f9e; color: #fff; }
+    .menu-btn.c-amber  { background: linear-gradient(160deg, #e0a83f, #ae7a1c); border-color: #ae7a1c; color: #241a05; }
+    .menu-btn.c-slate  { background: linear-gradient(160deg, #5c7189, #34445a); border-color: #34445a; color: #fff; }
+    .menu-btn.c-blue:hover, .menu-btn.c-teal:hover, .menu-btn.c-pink:hover,
+    .menu-btn.c-purple:hover, .menu-btn.c-amber:hover, .menu-btn.c-slate:hover {
+      filter: brightness(1.15);
+      color: inherit;
+    }
+
     /* ---------- How to play ---------- */
 
     .how-to-play-panel {
       background: rgba(10, 20, 14, 0.92);
-      border: 2px solid var(--brass);
       border-radius: 18px;
       padding: 34px 40px;
       max-width: 560px;
@@ -837,10 +993,11 @@
 
     .lobby-panel {
       background: rgba(10, 20, 14, 0.9);
-      border: 2px solid var(--brass);
       border-radius: 18px;
       padding: 34px 40px;
       width: 420px;
+      max-height: 90vh;
+      overflow-y: auto;
       color: var(--cream);
       font-family: var(--font-body);
       text-align: center;
@@ -969,6 +1126,26 @@
     .friend-tab-panel { display: none; }
     .friend-tab-panel.active { display: block; }
 
+    /* ---------- Play Online tabs (Quick Match / Create Room / Join Room) ---------- */
+    .lobby-tabs { display: flex; gap: 8px; margin: 14px 0 12px; }
+    .lobby-tab-btn {
+      flex: 1;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 9px 6px;
+      border-radius: 8px;
+      border: 1.5px solid var(--brass);
+      background: transparent;
+      color: var(--cream);
+      opacity: 0.65;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .lobby-tab-btn.active { background: var(--brass-dark); opacity: 1; }
+    .lobby-tab-panel { display: none; text-align: left; }
+    .lobby-tab-panel.active { display: block; }
+
     /* ---------- Account: login / register ---------- */
     .auth-mode-switch { display: flex; gap: 8px; margin-bottom: 16px; }
     .auth-mode-btn {
@@ -1006,7 +1183,7 @@
        itself; seats sit pinned to the edges and the human hand sits
        fixed at the bottom (matches the reference screenshot).
        ================================================================ */
-    @media (max-width: 700px) {
+    @media (max-width: 480px) {
 
       #stage-wrap { padding: 0; }
 
@@ -1095,8 +1272,8 @@
 
       /* ---- Player's own hand: large + clear at the bottom ---- */
       #hand .card {
-        width: 82px;
-        height: 114px;
+        width: 102px;
+        height: 143px;
         border-radius: 8px;
         box-shadow: 0 6px 16px rgba(0,0,0,.55);
       }
@@ -1104,8 +1281,8 @@
 
       /* ---- Table (played) cards ---- */
       #table-cards .card {
-        width: 54px;
-        height: 80px;
+        width: 68px;
+        height: 100px;
       }
 
       /* ---- Pool markers / capture chips ---- */
@@ -1171,46 +1348,67 @@
         font-size: 17px;
         padding: 13px 34px;
       }
+    }
 
-      /* ---- Main menu / how-to-play / lobby ---- */
-      .menu-title { font-size: 44px; }
-      .menu-subtitle { font-size: 12px; }
+    /* ---------- Menu / lobby / how-to-play screens on a short (landscape
+       phone) viewport -- these are real full-viewport overlays, not part
+       of the scaled game stage, so they compact based on available
+       HEIGHT rather than width. .full-overlay itself also always
+       scrolls (see its base rule) as a hard guarantee nothing is ever
+       clipped off-screen, even if these sizes need further tuning. ---------- */
+    @media (max-height: 500px) {
+      .menu-title { font-size: 26px; margin-bottom: 1px; }
+      .menu-subtitle { font-size: 10px; margin-bottom: 10px; }
+      .menu-grid {
+        grid-template-columns: repeat(2, minmax(120px, 160px));
+        gap: 6px;
+      }
       .menu-btn {
-        font-size: 16px;
-        padding: 15px 0;
-        width: 80vw;
+        font-size: 12px;
+        padding: 8px 10px;
+        margin: 0;
+      }
+      .menu-grid .menu-btn {
+        width: 100%;
       }
       .menu-btn.small {
         width: auto;
-        font-size: 14px;
-        padding: 9px 20px;
+        font-size: 12px;
+        padding: 6px 16px;
       }
 
       .how-to-play-panel {
-        padding: 22px 18px;
+        padding: 16px 18px;
         max-width: 92vw;
+        max-height: 88vh;
       }
-      .how-to-play-panel h2 { font-size: 24px; }
-      .how-to-play-panel h3 { font-size: 17px; }
-      .how-to-play-panel p { font-size: 14px; }
+      .how-to-play-panel h2 { font-size: 20px; margin: 0 0 6px; }
+      .how-to-play-panel h3 { font-size: 15px; }
+      .how-to-play-panel p { font-size: 13px; margin: 0 0 8px; }
 
       .lobby-panel {
-        width: 90vw;
-        padding: 24px 18px;
+        width: 94vw;
+        max-width: 480px;
+        padding: 12px 20px;
+        max-height: 90vh;
       }
-      .lobby-panel h2 { font-size: 22px; }
-      .lobby-field label { font-size: 11px; }
+      .lobby-panel h2 { font-size: 18px; margin: 0 0 6px; }
+      .lobby-tabs { margin: 8px 0 8px; }
+      .lobby-tab-btn { font-size: 11px; padding: 6px 4px; }
+      .lobby-field { margin-bottom: 6px; }
+      .lobby-field label { font-size: 10px; margin-bottom: 2px; }
       .lobby-field input {
-        font-size: 15px;
-        padding: 10px 12px;
+        font-size: 14px;
+        padding: 6px 10px;
       }
-      #lobby-room-code { font-size: 28px; }
-      #lobby-player-list { font-size: 14px; }
-      #lobby-status { font-size: 13px; }
+      #lobby-room-code { font-size: 22px; margin: 2px 0 8px; }
+      #lobby-player-list { font-size: 12px; }
+      #lobby-status { font-size: 12px; }
+      .lobby-divider { margin: 8px 0; }
     }
 
     /* ---------- Spades mobile (mirrors the Court Piece mobile block) ---------- */
-    @media (max-width: 700px) {
+    @media (max-width: 480px) {
       #spades-stage-wrap { padding: 0; }
       #spades-stage {
         top: 0;
@@ -1231,18 +1429,18 @@
       #spades-seat-3 { left: 91vw; top: 46vh; width: 90px; height: 110px; }
 
       #spades-hand .card {
-        width: 82px;
-        height: 114px;
+        width: 102px;
+        height: 143px;
         border-radius: 8px;
         box-shadow: -1 6px 16px rgba(0,0,0,.55);
       }
       #spades-hand { position: absolute; inset: 0; pointer-events: auto; bottom: 0; }
-      #spades-your-status { bottom: 145px; font-size: 12px; padding: 3px 10px; }
+      #spades-your-status { bottom: 128px; font-size: 12px; padding: 3px 10px; }
       #spades-target-watermark { font-size: 30px; letter-spacing: 3px; }
 
       #spades-table-cards .card {
-        width: 54px;
-        height: 80px;
+        width: 68px;
+        height: 100px;
       }
 
       #spades-bid-overlay { top: 32vh; }
@@ -1277,6 +1475,8 @@
     <div id="trump-panel-holder" style="position:absolute; left:23%; top:95px; transform:translateX(-50%); color:var(--cream); font-family:var(--font-body); font-size:14px; z-index:5;">
       <span id="trump-panel-text">Trump: -</span>
     </div>
+
+    <div id="turn-indicator" class="turn-indicator"></div>
 
     <!-- Bot seats -->
     <div id="seat-1" class="seat">
@@ -1335,6 +1535,7 @@
 </div>
 
 <button id="mic-toggle-btn" title="You always hear the table -- this button only controls whether they hear you">🎤 Mic</button>
+<button id="exit-game-btn" title="Exit to menu">✕ Exit</button>
 
 <!-- ============================================================
      SPADES -- own stage, own overlays. Shares CSS classes with
@@ -1353,6 +1554,8 @@
     <!-- Human-only "redo last trick" -- casual/forgiving feature, not
          a fairness feature. Up to 3 uses per round. -->
     <button id="spades-redo-btn" title="Rewind and replay your last trick (up to 3 per round)">↺<span id="spades-redo-badge" class="redo-badge">3</span></button>
+
+    <div id="spades-turn-indicator" class="turn-indicator"></div>
 
     <div id="spades-round-panel" class="panel">
       <p class="panel-label">Round</p>
@@ -1391,11 +1594,8 @@
     <!-- Bidding -->
     <div id="spades-bid-overlay" class="overlay-panel">
       <div class="overlay-title">Your Bid</div>
-      <div style="margin-bottom:14px;">
-        <select id="spades-bid-select" style="font-size:18px; padding:8px 12px; border-radius:8px; border:1.5px solid var(--brass); background:rgba(10,20,14,.9); color:var(--cream);"></select>
-      </div>
-      <button class="yesno-btn" id="spades-bid-nil">Bid Nil (0)</button>
-      <button class="yesno-btn" id="spades-bid-confirm">Confirm Bid</button>
+      <div class="spades-bid-grid" id="spades-bid-grid"></div>
+      <button class="yesno-btn" id="spades-bid-confirm" disabled>Confirm Bid</button>
     </div>
 
     <div id="spades-capture-banner" class="banner"></div>
@@ -1434,16 +1634,18 @@
 
 
 <!-- Choose your game -->
-<div id="game-select-overlay" class="full-overlay visible">
+<div id="game-select-overlay" class="full-overlay bg-game-select visible">
   <h1 class="menu-title">Card Table</h1>
   <p class="menu-subtitle">Pick a game</p>
-  <button id="select-spades" class="menu-btn primary">♠ Spades</button>
-  <button id="select-court-piece" class="menu-btn primary">🃏 Court Piece</button>
+  <div class="menu-grid">
+    <button id="select-spades" class="menu-btn c-purple">♠ Spades</button>
+    <button id="select-court-piece" class="menu-btn c-teal">🃏 Court Piece</button>
+  </div>
 </div>
 
 <!-- Main menu -->
 <!-- Main Menu V2 -->
-<div id="menu-overlay" class="full-overlay">
+<div id="menu-overlay" class="full-overlay bg-court-piece">
 
   <h1 class="menu-title">🃏 COURT PIECE</h1>
 
@@ -1451,33 +1653,35 @@
       Choose how you want to play
   </p>
 
-  <button id="menu-play-online" class="menu-btn primary">
-      🌐 Play Online
-  </button>
+  <div class="menu-grid">
+    <button id="menu-play-online" class="menu-btn c-blue">
+        🌐 Play Online
+    </button>
 
-  <button id="menu-play-bots" class="menu-btn primary">
-      🤖 Play With Bots
-  </button>
+    <button id="menu-play-bots" class="menu-btn c-teal">
+        🤖 Play With Bots
+    </button>
 
-  <button id="menu-statistics" class="menu-btn">
-      📊 Statistics
-  </button>
+    <button id="menu-statistics" class="menu-btn c-amber">
+        📊 Statistics
+    </button>
 
-  <button id="menu-friends" class="menu-btn">
-      👥 Friends
-  </button>
+    <button id="menu-friends" class="menu-btn c-purple">
+        👥 Friends
+    </button>
 
-  <button id="menu-account" class="menu-btn">
-      👤 Profile
-  </button>
+    <button id="menu-account" class="menu-btn c-pink">
+        👤 Profile
+    </button>
 
-  <button id="menu-settings" class="menu-btn">
-      ⚙ Settings
-  </button>
+    <button id="menu-settings" class="menu-btn c-slate">
+        ⚙ Settings
+    </button>
 
-  <button id="menu-how-to-play" class="menu-btn">
-      📖 How To Play
-  </button>
+    <button id="menu-how-to-play" class="menu-btn c-teal">
+        📖 How To Play
+    </button>
+  </div>
 
   <button
       id="menu-back-to-games"
@@ -1489,7 +1693,7 @@
 </div>
 
 <!-- Account -->
-<div id="account-overlay" class="full-overlay">
+<div id="account-overlay" class="full-overlay bg-account">
   <div class="lobby-panel">
     <h2>Account</h2>
 
@@ -1546,7 +1750,7 @@
 </div>
 
 <!-- Friends -->
-<div id="friends-overlay" class="full-overlay">
+<div id="friends-overlay" class="full-overlay bg-account">
   <div class="lobby-panel">
     <h2>Friends</h2>
 
@@ -1583,7 +1787,7 @@
 </div>
 
 <!-- Settings -->
-<div id="settings-overlay" class="full-overlay">
+<div id="settings-overlay" class="full-overlay bg-account">
   <div class="lobby-panel">
     <h2>Settings</h2>
     <div class="lobby-row" style="align-items:center;">
@@ -1594,7 +1798,7 @@
   </div>
 </div>
 <!-- Statistics -->
-<div id="statistics-overlay" class="full-overlay">
+<div id="statistics-overlay" class="full-overlay bg-account">
   <div class="lobby-panel">
 
     <h2>📊 Statistics</h2>
@@ -1629,17 +1833,19 @@
 
 
 <!-- Spades menu -->
-<div id="spades-menu-overlay" class="full-overlay">
+<div id="spades-menu-overlay" class="full-overlay bg-spades">
   <h1 class="menu-title">♠ Spades</h1>
   <p class="menu-subtitle">Trump is always spades</p>
-  <button id="spades-play-individual" class="menu-btn primary">Play - Individual</button>
-  <button id="spades-play-team" class="menu-btn primary">Play - Team</button>
-  <button id="spades-how-to-play" class="menu-btn">How to Play</button>
+  <div class="menu-grid">
+    <button id="spades-play-individual" class="menu-btn c-purple">Play - Individual</button>
+    <button id="spades-play-team" class="menu-btn c-blue">Play - Team</button>
+    <button id="spades-how-to-play" class="menu-btn c-slate">How to Play</button>
+  </div>
   <button id="spades-back-to-games" class="menu-btn small" style="margin-top:14px;">← Choose a different game</button>
 </div>
 
 <!-- Spades how to play -->
-<div id="spades-how-to-play-overlay" class="full-overlay">
+<div id="spades-how-to-play-overlay" class="full-overlay bg-spades">
   <div class="how-to-play-panel">
     <h2>How to Play Spades</h2>
     <p>Spades is a 4-player trick-taking game. Spades are <strong>always
@@ -1679,7 +1885,7 @@
 </div>
 
 <!-- How to play -->
-<div id="how-to-play-overlay" class="full-overlay">
+<div id="how-to-play-overlay" class="full-overlay bg-court-piece">
   <div class="how-to-play-panel">
     <h2>How to Play</h2>
     <p>Court Piece is a 4-player trick-taking game, played in two fixed
@@ -1710,24 +1916,10 @@
   </div>
 </div>
 
-  <div id="lobby-overlay" class="full-overlay">
+  <div id="lobby-overlay" class="full-overlay bg-lobby">
     <div class="lobby-panel">
 
     <h2>🌐 PLAY ONLINE</h2>
-
-    <button id="menu-quick-match"
-            class="menu-btn primary"
-            style="width:100%;margin-bottom:6px;">
-        ⚡ QUICK MATCH
-    </button>
-    <p style="font-size:12px; opacity:.7; margin:0 0 15px;">Matches you with 4 real online players -- never bots.</p>
-
-    <div id="quick-match-status">
-      <p id="quick-match-status-text">Waiting for players... (1/4)</p>
-      <button id="quick-match-cancel-btn" class="menu-btn small" type="button">Cancel</button>
-    </div>
-
-    <div class="lobby-divider">OR</div>
 
     <div class="lobby-field">
         <label for="lobby-name">Your Name</label>
@@ -1738,34 +1930,56 @@
         <span id="lobby-name-lock-hint" style="display:none; font-size:11px; opacity:.65; margin-top:4px;">Logged in as your account username -- log out to use a different name.</span>
     </div>
 
-    <button id="lobby-create"
-            class="menu-btn"
-            style="width:100%;">
-        🏠 CREATE ROOM
-    </button>
+    <div class="lobby-tabs">
+      <button id="lobby-tab-quick" class="lobby-tab-btn active" type="button">⚡ Quick Match</button>
+      <button id="lobby-tab-create" class="lobby-tab-btn" type="button">🏠 Create Room</button>
+      <button id="lobby-tab-join" class="lobby-tab-btn" type="button">🔑 Join Room</button>
+    </div>
 
-    <div class="lobby-divider">OR JOIN A ROOM</div>
-
-    <div class="lobby-row">
-
-        <div class="lobby-field">
-            <label for="lobby-code">Room Code</label>
-            <input id="lobby-code"
-                  type="text"
-                  maxlength="6"
-                  placeholder="ABCDE">
-        </div>
-
-        <button id="lobby-join"
-                class="menu-btn small">
-            🔑 JOIN
+    <div id="lobby-tab-panel-quick" class="lobby-tab-panel active">
+        <button id="menu-quick-match"
+                class="menu-btn primary"
+                style="width:100%;margin-bottom:6px;">
+            ⚡ QUICK MATCH
         </button>
+        <p style="font-size:12px; opacity:.7; margin:0;">Matches you with 4 real online players -- never bots.</p>
 
+        <div id="quick-match-status">
+          <p id="quick-match-status-text">Waiting for players... (1/4)</p>
+          <button id="quick-match-cancel-btn" class="menu-btn small" type="button">Cancel</button>
+        </div>
+    </div>
+
+    <div id="lobby-tab-panel-create" class="lobby-tab-panel">
+        <button id="lobby-create"
+                class="menu-btn"
+                style="width:100%;">
+            🏠 CREATE ROOM
+        </button>
+    </div>
+
+    <div id="lobby-tab-panel-join" class="lobby-tab-panel">
+        <div class="lobby-row">
+
+            <div class="lobby-field">
+                <label for="lobby-code">Room Code</label>
+                <input id="lobby-code"
+                      type="text"
+                      maxlength="6"
+                      placeholder="ABCDE">
+            </div>
+
+            <button id="lobby-join"
+                    class="menu-btn small">
+                🔑 JOIN
+            </button>
+
+        </div>
     </div>
 
     <button id="lobby-friends"
             class="menu-btn"
-            style="width:100%;margin-top:15px;">
+            style="width:100%;margin-top:12px;">
         👥 FRIENDS
     </button>
 
@@ -1819,6 +2033,33 @@
 </div>
 
 <script>
+  // ---------------- Basic anti-copy deterrents ----------------
+  // Honest caveat (see chat reply): this only discourages casual
+  // copying -- it cannot stop someone determined, since the browser
+  // always has the final HTML/CSS/JS once the page has loaded. Real
+  // protection has to happen server-side and in the native WebView
+  // wrapper (disable "View Source"/remote debugging there).
+  (function () {
+    document.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+    document.addEventListener("dragstart", function (e) { e.preventDefault(); });
+    document.addEventListener("selectstart", function (e) {
+      // Still allow selecting text inside actual input/textarea fields
+      // (login, room code, etc.) -- only block it on the game itself.
+      const tag = (e.target && e.target.tagName) || "";
+      if (tag !== "INPUT" && tag !== "TEXTAREA") e.preventDefault();
+    });
+    document.addEventListener("keydown", function (e) {
+      const key = (e.key || "").toUpperCase();
+      const blockedCombo =
+        key === "F12" ||
+        (e.ctrlKey && e.shiftKey && (key === "I" || key === "J" || key === "C")) ||
+        (e.ctrlKey && (key === "U" || key === "S"));
+      if (blockedCombo) e.preventDefault();
+    });
+    console.log("%cStop!", "color:#ad3b2e; font-size:32px; font-weight:bold;");
+    console.log("%cThis is a browser feature meant for developers. Copying this game's code is not permitted.", "font-size:14px;");
+  })();
+
   // ---------------- Android WebView safety shim ----------------
   // Some WebView configurations (DOM storage disabled) leave window.localStorage
   // as null. Any localStorage.getItem/setItem call anywhere below this point
@@ -1848,6 +2089,24 @@
       console.error("Unhandled error in Court Piece:", e.message, "at", e.filename + ":" + e.lineno);
     });
   })();
+
+  // ---------------- Best-effort landscape lock ----------------
+  // This can only ever be a fallback: the Screen Orientation API is
+  // only honored by the browser/WebView in specific contexts (a
+  // fullscreen element, or an installed PWA), so it will silently
+  // no-op in a plain embedded WebView. The real, reliable lock has to
+  // be set natively -- android:screenOrientation="landscape" on the
+  // activity in AndroidManifest.xml (or setRequestedOrientation() in
+  // code). This is just a harmless extra attempt in case the wrapper
+  // ever runs the page in a context where it does apply.
+  (function () {
+    try {
+      if (screen.orientation && typeof screen.orientation.lock === "function") {
+        screen.orientation.lock("landscape").catch(function () { /* not supported here -- fine, native lock is the real fix */ });
+      }
+    } catch (e) { /* ignore -- see comment above */ }
+  })();
+
   // ============================================================
   // ENGINE (ported from game.py / rules.py / bot.py / player.py)
   // ============================================================
@@ -2311,7 +2570,14 @@
   // each time (not once at load) since the viewport can rotate/resize.
 
   function isMobile() {
-    return window.innerWidth <= 700;
+    // Landscape-only now -- a locked phone is wide and short (e.g.
+    // ~700-950px wide, ~350-450px tall), so the old "narrow width"
+    // check for a portrait phone would never really fire correctly
+    // any more. The scaled 1000x700 desktop layout (see fitStage())
+    // already handles any aspect ratio via uniform scale-to-fit, so
+    // this compact layout is now reserved for genuinely tiny/unusual
+    // viewports rather than every phone.
+    return window.innerWidth <= 480;
   }
 
   function getSeatPos() {
@@ -2493,10 +2759,14 @@
   function markInGame() {
     inGame = true;
     history.pushState({ courtPiece: "game" }, "", location.href);
+    const exitBtn = document.getElementById("exit-game-btn");
+    if (exitBtn) exitBtn.classList.add("visible");
   }
 
   function markAtMenu() {
     inGame = false;
+    const exitBtn = document.getElementById("exit-game-btn");
+    if (exitBtn) exitBtn.classList.remove("visible");
   }
 
   const MENU_SUB_SCREENS_UNDER_COURT_PIECE = [
@@ -2546,27 +2816,41 @@
     return false; // already at game-select-overlay -- nothing more to close
   }
 
+  // Shared by both the physical/browser back button and the on-screen
+  // Exit button -- asks for confirmation, and if confirmed, cleans up
+  // (leaves the online room / clears the Spades resume-save so it
+  // doesn't just reload back into the same game) before reloading to
+  // the menu.
+  function promptExitGame() {
+    const shouldExit = window.confirm("Exit the game and return to the menu?");
+    if (!shouldExit) return false;
+
+    if (currentMode === "online" && socket && socket.readyState === WebSocket.OPEN) {
+      // Give up the seat for good -- otherwise the server's normal
+      // reconnect window would let a later connection (including a
+      // future Quick Match) auto-drop the player right back into
+      // this same room.
+      send({ type: "leave_room" });
+    }
+    if (currentMode === "spades" && typeof clearSpadesSave === "function") {
+      // A deliberate "yes, exit" should actually reach the menu --
+      // otherwise the auto-resume feature would just reload straight
+      // back into this same game. Anything OTHER than this explicit
+      // confirm (closing the tab/app, force-quit) still leaves the
+      // save in place to resume from later.
+      clearSpadesSave();
+    }
+    window.location.reload();
+    return true;
+  }
+
+  const exitGameBtn = document.getElementById("exit-game-btn");
+  if (exitGameBtn) exitGameBtn.addEventListener("click", () => promptExitGame());
+
   window.addEventListener("popstate", () => {
     if (inGame) {
-      const shouldExit = window.confirm("Exit the game and return to the menu?");
-      if (shouldExit) {
-        if (currentMode === "online" && socket && socket.readyState === WebSocket.OPEN) {
-          // Give up the seat for good -- otherwise the server's normal
-          // reconnect window would let a later connection (including a
-          // future Quick Match) auto-drop the player right back into
-          // this same room.
-          send({ type: "leave_room" });
-        }
-        if (currentMode === "spades" && typeof clearSpadesSave === "function") {
-          // A deliberate "yes, exit" should actually reach the menu --
-          // otherwise the auto-resume feature would just reload
-          // straight back into this same game. Anything OTHER than
-          // this explicit confirm (closing the tab/app, force-quit)
-          // still leaves the save in place to resume from later.
-          clearSpadesSave();
-        }
-        window.location.reload();
-      } else {
+      const exited = promptExitGame();
+      if (!exited) {
         // Cancel the back navigation by re-arming a history entry so the
         // next back press is caught by this same handler again.
         history.pushState({ courtPiece: "game" }, "", location.href);
@@ -2593,8 +2877,24 @@
 
   function fitStage() {
     if (isMobile()) return; // CSS @media block makes #stage full-bleed on mobile
-    const scale = Math.min(window.innerWidth / 1000, window.innerHeight / 700);
-    stage.style.transform = `translate(-50%, -50%) scale(${scale})`;
+
+    const scaleX = window.innerWidth / 1000;
+    const scaleY = window.innerHeight / 700;
+
+    if (scaleX > scaleY) {
+      // Viewport is proportionally wider than the 1000x700 design
+      // (landscape phone) -- a uniform scale would letterbox with
+      // empty space on both sides, so stretch to fill the full width
+      // instead and drop the frame border (see .stage-stretched).
+      stage.classList.add("stage-stretched");
+      stage.style.transform = `translate(-50%, -50%) scale(${scaleX}, ${scaleY})`;
+    } else {
+      // Viewport is proportionally taller/narrower than the design --
+      // fit inside normally (letterboxes top/bottom instead), same as
+      // before.
+      stage.classList.remove("stage-stretched");
+      stage.style.transform = `translate(-50%, -50%) scale(${scaleX})`;
+    }
   }
   window.addEventListener("resize", fitStage);
   fitStage();
@@ -2701,30 +3001,11 @@
     el.addEventListener("pointercancel", () => reset(true));
   }
 
-  // ---------------- Your-turn highlighting (spacing, not color) ----------------
-  // While it's your turn, cards you can legally play get extra
-  // breathing room separating them from the rest of the fan, instead
-  // of a border glow or dimming the others. Since a sorted hand keeps
-  // same-suit cards contiguous, the legal group is always one
-  // unbroken run -- this just widens the gap at each point the
-  // legal/illegal boundary is crossed. Returns one cumulative x-offset
-  // per card index to add on top of the normal i*gap spacing.
-  function computeHighlightOffsets(hand, isPlayableFn, myTurn, extraGap) {
-    const offsets = new Array(hand.length).fill(0);
-    if (!myTurn) return offsets;
-
-    let running = 0;
-    let prevPlayable = null;
-    for (let i = 0; i < hand.length; i++) {
-      const playable = isPlayableFn(hand[i]);
-      if (i > 0 && prevPlayable !== null && playable !== prevPlayable) {
-        running += extraGap;
-      }
-      offsets[i] = running;
-      prevPlayable = playable;
-    }
-    return offsets;
-  }
+  // ---------------- Your-turn highlighting (a lift, not a gap or color) ----------------
+  // While it's your turn, cards you can legally play get a small
+  // permanent lift (see .hand-card.playable in the CSS) -- normal
+  // spacing is preserved (no extra gaps), no border color, and cards
+  // you can't play are left completely untouched, not dimmed.
 
   // ---------------- Rendering ----------------
 
@@ -2735,7 +3016,7 @@
 
     const mobile = isMobile();
     const stageWidth = mobile ? window.innerWidth : 1000;
-    const cardW = mobile ? 82 : 84;
+    const cardW = mobile ? 102 : 105; // 25% larger than the original 82/84
 
     let gap, startX;
     if (mobile) {
@@ -2752,7 +3033,7 @@
       // Same widening behavior on desktop -- cap raised from 58 so a
       // near-empty hand fans out clearly instead of staying at its
       // 13-card spacing.
-      gap = Math.min(100, (stageWidth - 140) / Math.max(hand.length - 1, 1));
+      gap = Math.min(70, (stageWidth - 140) / Math.max(hand.length - 1, 1));
       const totalWidth = (hand.length - 1) * gap + cardW;
       startX = (stageWidth - totalWidth) / 2;
     }
@@ -2760,8 +3041,6 @@
     const baseY = mobile ? window.innerHeight - 138 : 575;
 
     const myTurn = acceptingHumanClick && turnPlayer === 0;
-    const extraGap = mobile ? 16 : 26;
-    const offsets = computeHighlightOffsets(hand, isValidHumanCard, myTurn, extraGap);
 
     hand.forEach((card, i) => {
 
@@ -2769,13 +3048,9 @@
 
       el.classList.add("hand-card");
 
-      const center = (hand.length - 1) / 2;
+      if (myTurn && isValidHumanCard(card)) el.classList.add("playable");
 
-      const curve = Math.abs(i - center);
-
-      const y = baseY + curve * 2;
-
-      positionAbs(el, startX + i * gap + offsets[i], y);
+      positionAbs(el, startX + i * gap, baseY);
 
       el.style.zIndex = i;
 
@@ -2995,6 +3270,9 @@
     renderHUD();
     renderPoolMarker();
 
+    const turnIndEl = document.getElementById("turn-indicator");
+    if (turnIndEl) turnIndEl.classList.remove("visible"); // hidden until trick play actually begins
+
     const chooserIndex = game.initialTrumpChooserIndex();
 
     if (game.players[chooserIndex].isHuman) {
@@ -3091,6 +3369,7 @@
 
   function advanceTurn() {
     renderSeats();
+    updateTurnIndicator();
 
     if (game.players[turnPlayer].isHuman) {
       acceptingHumanClick = true;
@@ -3102,6 +3381,17 @@
     renderHand(); // refreshes the playable-card highlight for the new turn
   }
 
+  function updateTurnIndicator() {
+    const el = document.getElementById("turn-indicator");
+    if (!el) return;
+    const isMe = turnPlayer === 0;
+    if (isMe) {
+      el.textContent = "Your Turn";
+      el.classList.add("visible");
+    } else {
+      el.classList.remove("visible");
+    }
+  }
   function leadSuitOfTrick() {
     return currentTrick.length === 0 ? null : currentTrick[0].card.suit;
   }
@@ -3157,9 +3447,12 @@
 
     const el = createCardFace(card);
     el.classList.add("table-card");
+    const seatPos = getSeatPos()[idx];
+    positionAbs(el, seatPos.x, seatPos.y);
+    tableCardsEl.appendChild(el);
+    el.getBoundingClientRect(); // force reflow so the slide-in transition applies
     const pos = getPlayPos()[idx];
     positionAbs(el, pos.x, pos.y);
-    tableCardsEl.appendChild(el);
 
     playCardToTable(idx, card, el, false);
   }
@@ -3775,6 +4068,22 @@
     friendPanelMine.classList.remove("active");
   });
 
+  // ---- Play Online tabs (Quick Match / Create Room / Join Room) ----
+  const lobbyTabs = [
+    { btn: "lobby-tab-quick", panel: "lobby-tab-panel-quick" },
+    { btn: "lobby-tab-create", panel: "lobby-tab-panel-create" },
+    { btn: "lobby-tab-join", panel: "lobby-tab-panel-join" }
+  ];
+  lobbyTabs.forEach(({ btn }) => {
+    document.getElementById(btn).addEventListener("click", () => {
+      lobbyTabs.forEach(({ btn: b, panel: p }) => {
+        const isActive = b === btn;
+        document.getElementById(b).classList.toggle("active", isActive);
+        document.getElementById(p).classList.toggle("active", isActive);
+      });
+    });
+  });
+
   lobbyInviteFriendsBtn.addEventListener("click", () => {
     lobbyOverlay.classList.remove("visible");
     friendsOverlay.classList.add("visible");
@@ -4387,7 +4696,7 @@
 
     const mobile = isMobile();
     const stageWidth = mobile ? window.innerWidth : 1000;
-    const cardW = mobile ? 82 : 62;
+    const cardW = mobile ? 102 : 105; // matches the shared .card size (was a stale 62 that never matched the real CSS)
 
     let gap, startX;
     if (mobile) {
@@ -4408,13 +4717,12 @@
     const baseY = mobile ? window.innerHeight - 138 : 600;
 
     const canPlay = state.phase === "trick" && state.turnPlayer === mySeat;
-    const extraGap = mobile ? 16 : 20;
-    const offsets = computeHighlightOffsets(hand, (c) => isValidOnlineCard(state, c), canPlay, extraGap);
 
     hand.forEach((card, i) => {
       const el = createCardFace(card);
       el.classList.add("hand-card");
-      positionAbs(el, startX + i * gap + offsets[i], baseY);
+      if (canPlay && isValidOnlineCard(state, card)) el.classList.add("playable");
+      positionAbs(el, startX + i * gap, baseY);
       el.style.zIndex = i;
       if (canPlay) {
         attachPlayGesture(el, () => onOnlineCardClick(card));
@@ -4486,6 +4794,19 @@
     scorePanelText.textContent = `${state.team1Score} - ${state.team2Score}`;
   }
 
+  function updateOnlineTurnIndicator(state) {
+    const el = document.getElementById("turn-indicator");
+    if (!el) return;
+
+    const isMe = state.phase === "trick" && state.turnPlayer === mySeat;
+    if (isMe) {
+      el.textContent = "Your Turn";
+      el.classList.add("visible");
+    } else {
+      el.classList.remove("visible");
+    }
+  }
+
   function renderOnlinePoolMarker(state) {
     for (const idx of [1, 2, 3]) {
       const marker = seatEls[idx].querySelector(".pool-marker");
@@ -4543,9 +4864,12 @@
 
       const el = createCardFace(entry.card);
       el.classList.add("table-card");
+      const seatPos = getSeatPos()[slotFor(entry.playerIndex)];
+      positionAbs(el, seatPos.x, seatPos.y);
+      tableCardsEl.appendChild(el);
+      el.getBoundingClientRect(); // force reflow so the slide-in transition applies
       const pos = getPlayPos()[slotFor(entry.playerIndex)];
       positionAbs(el, pos.x, pos.y);
-      tableCardsEl.appendChild(el);
       onlineTableEls[entry.playerIndex] = el;
     }
 
@@ -4578,6 +4902,7 @@
     renderOnlineHUD(state);
     renderOnlinePoolMarker(state);
     renderOnlineTableCards(state);
+    updateOnlineTurnIndicator(state);
 
     trumpButtonsEl.classList.toggle(
       "visible",
@@ -4700,8 +5025,7 @@
   const spadesScoreChipsEl = document.getElementById("spades-score-chips");
 
   const spadesBidOverlay = document.getElementById("spades-bid-overlay");
-  const spadesBidSelect = document.getElementById("spades-bid-select");
-  const spadesBidNilBtn = document.getElementById("spades-bid-nil");
+  const spadesBidGrid = document.getElementById("spades-bid-grid");
   const spadesBidConfirmBtn = document.getElementById("spades-bid-confirm");
 
   const spadesRoundBannerEl = document.getElementById("spades-round-banner");
@@ -4784,13 +5108,20 @@
   let spadesBiddingQueue = [];
 
   // ---------------- Redo (undo last trick), human-only, casual/cheat feature ----------------
-  // A rolling snapshot taken right before each trick begins, kept up
-  // to 3 deep. Redo pops the most recent one and restores it, so the
-  // player can rewind and replay up to their last 3 completed tricks.
-  // Charges refill every round -- this is deliberately forgiving
-  // ("cheating" by design) to keep the human player from feeling
-  // punished by a single misclick.
+  // A rolling snapshot taken right before each trick begins. Redo
+  // rewinds to that boundary, so the player can rewind and replay up
+  // to their last 3 completed tricks -- at any time, including
+  // mid-trick. Charges refill every round -- this is deliberately
+  // forgiving ("cheating" by design) to keep the human player from
+  // feeling punished by a misclick.
   const SPADES_REDO_CHARGES_PER_ROUND = 3;
+  // The stack holds one extra entry beyond the charge count: whenever
+  // nothing has been played yet for the next trick, the top entry is
+  // just a mirror of the current live state (it was pushed the moment
+  // that boundary was reached) -- spadesUndoLastTrick() skips past
+  // that mirror to find the real rewind target, so the stack needs
+  // room for "mirror + 3 genuine targets" to actually deliver 3 undos.
+  const SPADES_HISTORY_CAP = SPADES_REDO_CHARGES_PER_ROUND + 1;
   let spadesHistory = [];
   let spadesRedosLeft = SPADES_REDO_CHARGES_PER_ROUND;
 
@@ -4907,6 +5238,9 @@
     renderSpadesSeats();
     renderSpadesHand();
 
+    const spadesTurnIndEl = document.getElementById("spades-turn-indicator");
+    if (spadesTurnIndEl) spadesTurnIndEl.classList.remove("visible"); // hidden until trick play actually begins
+
     // Bidding order: player left of the dealer bids first, clockwise.
     spadesBiddingQueue = [0, 1, 2, 3].map((i) => (spadesGame.dealer + 1 + i) % 4);
     spadesPendingBidIdx = null;
@@ -4949,25 +5283,40 @@
     spadesPendingBidIdx = idx;
     saveSpadesState();
 
-    spadesBidSelect.innerHTML = "";
+    let selectedBid = null;
+
+    spadesBidGrid.innerHTML = "";
     for (let n = 1; n <= 13; n++) {
-      const opt = document.createElement("option");
-      opt.value = n;
-      opt.textContent = n;
-      spadesBidSelect.appendChild(opt);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "spades-bid-num-btn";
+      btn.textContent = n;
+      btn.onclick = () => selectBid(n, btn);
+      spadesBidGrid.appendChild(btn);
     }
+    const nilBtn = document.createElement("button");
+    nilBtn.type = "button";
+    nilBtn.className = "spades-bid-num-btn nil-btn";
+    nilBtn.textContent = "Nil";
+    nilBtn.onclick = () => selectBid(0, nilBtn);
+    spadesBidGrid.appendChild(nilBtn);
+
+    spadesBidConfirmBtn.disabled = true;
+
+    function selectBid(value, btnEl) {
+      selectedBid = value;
+      spadesBidGrid.querySelectorAll(".spades-bid-num-btn").forEach((b) => b.classList.remove("selected"));
+      btnEl.classList.add("selected");
+      spadesBidConfirmBtn.disabled = false;
+    }
+
     spadesBidOverlay.classList.add("visible");
 
-    spadesBidNilBtn.onclick = () => {
-      spadesBidOverlay.classList.remove("visible");
-      spadesPendingBidIdx = null;
-      spadesApplyBid(idx, 0);
-      spadesRunNextBid();
-    };
     spadesBidConfirmBtn.onclick = () => {
+      if (selectedBid === null) return;
       spadesBidOverlay.classList.remove("visible");
       spadesPendingBidIdx = null;
-      spadesApplyBid(idx, parseInt(spadesBidSelect.value, 10));
+      spadesApplyBid(idx, selectedBid);
       spadesRunNextBid();
     };
   }
@@ -4991,7 +5340,7 @@
 
   // Captures exactly what's needed to rewind to "right before this
   // trick started": each hand, each tricksWon count, and whether
-  // spades had been broken yet. Keeps only the most recent 3.
+  // spades had been broken yet. Kept up to SPADES_HISTORY_CAP deep.
   function spadesSnapshotBeforeTrick() {
     spadesHistory.push({
       turnPlayer: spadesTurnPlayer,
@@ -5001,18 +5350,31 @@
         tricksWon: p.tricksWon
       }))
     });
-    if (spadesHistory.length > SPADES_REDO_CHARGES_PER_ROUND) spadesHistory.shift();
+    if (spadesHistory.length > SPADES_HISTORY_CAP) spadesHistory.shift();
     renderSpadesRedoButton();
   }
 
-  // Rewinds to the start of the most recently completed trick --
-  // discards whatever was played for it (human and bots alike) so it
-  // can be replayed. Only usable between tricks (empty table).
-  function spadesUndoLastTrick() {
-    if (spadesRedosLeft <= 0 || spadesHistory.length === 0) return;
-    if (spadesCurrentTrick.length > 0) return; // mid-trick -- nothing sane to rewind to
+  // True if there's a fully completed trick to rewind to. The top of
+  // the stack always mirrors "before whichever trick is currently
+  // active or about to start" -- regardless of how many cards (0-3)
+  // are already down for it -- so the last COMPLETE trick is always
+  // one level behind that, never the in-progress one.
+  function spadesCanUndo() {
+    return spadesRedosLeft > 0 && spadesHistory.length >= 2;
+  }
 
-    const snapshot = spadesHistory.pop();
+  // Always rewinds to the start of the last fully completed trick --
+  // whether pressed between tricks or with 1-3 cards already played
+  // into the next one, it undoes that whole completed trick, not
+  // whatever's currently in progress. Discards any in-progress cards
+  // along the way, human and bots alike, so the completed trick can be
+  // replayed differently.
+  function spadesUndoLastTrick() {
+    if (!spadesCanUndo()) return;
+
+    const targetIndex = spadesHistory.length - 2;
+    const snapshot = spadesHistory[targetIndex];
+    spadesHistory.length = targetIndex; // drop the target and everything after it (including any in-progress trick)
     spadesRedosLeft -= 1;
 
     spadesTurnPlayer = snapshot.turnPlayer;
@@ -5028,10 +5390,14 @@
     renderSpadesHand();
     renderSpadesSeats();
     renderSpadesHUD();
-    renderSpadesRedoButton();
 
     showSpadesBanner(`Redo used -- replaying that trick (${spadesRedosLeft} left)`);
 
+    // Re-establish the invariant that the top of the stack mirrors the
+    // current live state -- needed so a second/third redo in a row
+    // (without any card being played in between) keeps stepping back
+    // one further complete trick each time instead of repeating this one.
+    spadesSnapshotBeforeTrick();
     spadesAdvanceTurn();
   }
 
@@ -5039,10 +5405,9 @@
     const btn = document.getElementById("spades-redo-btn");
     const badge = document.getElementById("spades-redo-badge");
     if (!btn) return;
-    const usable = spadesRedosLeft > 0 && spadesHistory.length > 0 && spadesCurrentTrick.length === 0;
     if (badge) badge.textContent = spadesRedosLeft;
     btn.title = `Rewind and replay your last trick (${spadesRedosLeft} left this round)`;
-    btn.disabled = !usable;
+    btn.disabled = !spadesCanUndo();
   }
 
   function spadesLeadSuit() {
@@ -5065,6 +5430,7 @@
 
   function spadesAdvanceTurn() {
     renderSpadesSeats();
+    updateSpadesTurnIndicator();
     const player = spadesGame.players[spadesTurnPlayer];
     if (player.isHuman) {
       spadesAcceptingHumanClick = true;
@@ -5075,6 +5441,17 @@
     renderSpadesHand(); // refreshes the playable-card highlight for the new turn
   }
 
+  function updateSpadesTurnIndicator() {
+    const el = document.getElementById("spades-turn-indicator");
+    if (!el) return;
+    const isMe = spadesTurnPlayer === 0;
+    if (isMe) {
+      el.textContent = "Your Turn";
+      el.classList.add("visible");
+    } else {
+      el.classList.remove("visible");
+    }
+  }
   function spadesIsValidHumanCard(card) {
     const legal = spadesLegalCards(spadesGame.players[0].hand, spadesLeadSuit(), spadesGame.spadesBroken);
     return legal.some((c) => c.rank === card.rank && c.suit === card.suit);
@@ -5113,9 +5490,12 @@
 
     const el = createCardFace(card);
     el.classList.add("table-card");
+    const seatPos = getSeatPos()[idx];
+    positionAbs(el, seatPos.x, seatPos.y);
+    spadesTableCardsEl.appendChild(el);
+    el.getBoundingClientRect(); // force reflow so the slide-in transition applies
     const pos = getPlayPos()[idx];
     positionAbs(el, pos.x, pos.y);
-    spadesTableCardsEl.appendChild(el);
 
     spadesPlayCardToTable(idx, card, el, false);
   }
@@ -5133,7 +5513,7 @@
 
     spadesCurrentTrick.push({ playerIndex, card, el });
     renderSpadesHUD();
-    renderSpadesRedoButton(); // disables Redo once a card's been played this trick
+    renderSpadesRedoButton(); // keeps the charge count/enabled-state current as the trick progresses
 
     spadesTurnPlayer = (playerIndex + 1) % 4;
 
@@ -5330,7 +5710,7 @@
 
     const mobile = isMobile();
     const stageWidth = mobile ? window.innerWidth : 1000;
-    const cardW = mobile ? 82 : 84;
+    const cardW = mobile ? 102 : 105; // 25% larger than the original 82/84
 
     let gap, startX;
     if (mobile) {
@@ -5341,22 +5721,19 @@
       const totalWidth = (hand.length - 1) * gap + cardW;
       startX = Math.max(leftMargin, (stageWidth - totalWidth) / 2);
     } else {
-      gap = Math.min(100, (stageWidth - 140) / Math.max(hand.length - 1, 1));
+      gap = Math.min(70, (stageWidth - 140) / Math.max(hand.length - 1, 1));
       const totalWidth = (hand.length - 1) * gap + cardW;
       startX = (stageWidth - totalWidth) / 2;
     }
     const baseY = mobile ? window.innerHeight - 138 : 575;
 
     const myTurn = spadesAcceptingHumanClick && spadesTurnPlayer === 0;
-    const extraGap = mobile ? 16 : 26;
-    const offsets = computeHighlightOffsets(hand, spadesIsValidHumanCard, myTurn, extraGap);
 
     hand.forEach((card, i) => {
       const el = createCardFace(card);
       el.classList.add("hand-card");
-      const center = (hand.length - 1) / 2;
-      const curve = Math.abs(i - center);
-      positionAbs(el, startX + i * gap + offsets[i], baseY + curve * 2);
+      if (myTurn && spadesIsValidHumanCard(card)) el.classList.add("playable");
+      positionAbs(el, startX + i * gap, baseY);
       el.style.zIndex = i;
       attachPlayGesture(el, () => onSpadesHumanCardClick(card, el));
       spadesHandEl.appendChild(el);
@@ -5468,8 +5845,17 @@
 
   function fitSpadesStage() {
     if (isMobile()) return;
-    const scale = Math.min(window.innerWidth / 1000, window.innerHeight / 700);
-    spadesStage.style.transform = `translate(-50%, -50%) scale(${scale})`;
+
+    const scaleX = window.innerWidth / 1000;
+    const scaleY = window.innerHeight / 700;
+
+    if (scaleX > scaleY) {
+      spadesStage.classList.add("stage-stretched");
+      spadesStage.style.transform = `translate(-50%, -50%) scale(${scaleX}, ${scaleY})`;
+    } else {
+      spadesStage.classList.remove("stage-stretched");
+      spadesStage.style.transform = `translate(-50%, -50%) scale(${scaleX})`;
+    }
   }
   window.addEventListener("resize", fitSpadesStage);
 
