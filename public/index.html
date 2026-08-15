@@ -11,9 +11,12 @@
       --felt-dark: #0a3527;
       --felt-mid: #0e4633;
       --felt-light: #135a41;
-      --brass: #c9a24b;
-      --brass-bright: #e0bd6a;
-      --brass-dark: #8a6b23;
+      /* Renamed in spirit only (still called --brass* so every existing
+         rule keeps working) -- values swapped from gold to a cyan/teal
+         accent so borders and highlights stop reading as "golden". */
+      --brass: #2fb8c9;
+      --brass-bright: #6fe3f0;
+      --brass-dark: #17707d;
       --cream: #f3ead9;
       --ink: #1c140c;
       --red-suit: #ad3b2e;
@@ -989,6 +992,43 @@
 
     .how-to-play-panel p { margin: 0 0 14px; font-size: 15px; }
 
+    /* ---------- Round-end ad interstitial ---------- */
+    .ad-panel {
+      background: rgba(18, 14, 28, 0.95);
+      border-radius: 18px;
+      padding: 26px 30px;
+      width: 340px;
+      max-width: 92vw;
+      color: var(--cream);
+      font-family: var(--font-body);
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.55);
+    }
+    .ad-panel-label {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      opacity: 0.6;
+      margin-bottom: 12px;
+    }
+    .ad-slot {
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      max-height: 46vh;
+      border-radius: 14px;
+      background: linear-gradient(160deg, #ff6f9c, #5aa8ff 55%, #7c5cff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ad-slot-placeholder {
+      color: rgba(255,255,255,0.9);
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .ad-slot-icon { font-size: 40px; margin-bottom: 8px; }
+
     /* ---------- Lobby ---------- */
 
     .lobby-panel {
@@ -1536,6 +1576,28 @@
 
 <button id="mic-toggle-btn" title="You always hear the table -- this button only controls whether they hear you">🎤 Mic</button>
 <button id="exit-game-btn" title="Exit to menu">✕ Exit</button>
+
+<!-- ============================================================
+     ROUND-END AD -- shown once after each round finishes (Court
+     Piece bots, Court Piece online, and Spades all call
+     showRoundAd()). Never shown in the lobby or between matches.
+     This is a placeholder slot: swap #ad-slot-content's innerHTML
+     for your real ad network's render call (AdMob, IronSource, a
+     web ad tag, etc.) -- the timer/close-button plumbing around it
+     stays the same.
+     ============================================================ -->
+<div id="ad-overlay" class="full-overlay" style="z-index:400; background:rgba(4,6,10,0.94);">
+  <div class="ad-panel">
+    <div class="ad-panel-label">Advertisement</div>
+    <div id="ad-slot-content" class="ad-slot">
+      <div class="ad-slot-placeholder">
+        <div class="ad-slot-icon">📣</div>
+        <div>Your ad here</div>
+      </div>
+    </div>
+    <button id="ad-close-btn" class="menu-btn primary" style="width:100%; margin-top:16px;" disabled>Ad closes in 3s</button>
+  </div>
+</div>
 
 <!-- ============================================================
      SPADES -- own stage, own overlays. Shares CSS classes with
@@ -3116,9 +3178,9 @@
       : "Trump: -";
 
     const { team1, team2 } = game.teamTricks();
-    tallyPanelText.textContent = `${team1} - ${team2}`;
+    tallyPanelText.innerHTML = `<span style="color:#5aa8ff">${team1}</span> - <span style="color:#ff6f9c">${team2}</span>`;
 
-    scorePanelText.textContent = `${game.team1Score} - ${game.team2Score}`;
+    scorePanelText.innerHTML = `<span style="color:#5aa8ff">${game.team1Score}</span> - <span style="color:#ff6f9c">${game.team2Score}</span>`;
 
     updateBotsTargetTab();
   }
@@ -3207,6 +3269,44 @@
     followSuitToastEl.classList.add("visible");
     setTimeout(() => followSuitToastEl.classList.remove("visible"), 1200);
   }
+
+  // ---------------- Round-end ad ----------------
+  // Shown exactly once per completed round -- Court Piece (bots and
+  // online) and Spades all call this from their own "round is over"
+  // code path. Never called from the lobby, from a match-over screen,
+  // or when starting a fresh match. Non-blocking: it just overlays the
+  // screen for a few seconds while the game keeps advancing normally
+  // underneath, same as a typical mobile-game interstitial.
+  let adCloseTimer = null;
+  function showRoundAd() {
+    const overlay = document.getElementById("ad-overlay");
+    const closeBtn = document.getElementById("ad-close-btn");
+    if (!overlay || !closeBtn) return;
+
+    overlay.classList.add("visible");
+    closeBtn.disabled = true;
+
+    if (adCloseTimer) clearInterval(adCloseTimer);
+    let secondsLeft = 3;
+    closeBtn.textContent = `Ad closes in ${secondsLeft}s`;
+
+    adCloseTimer = setInterval(() => {
+      secondsLeft -= 1;
+      if (secondsLeft <= 0) {
+        clearInterval(adCloseTimer);
+        adCloseTimer = null;
+        closeBtn.disabled = false;
+        closeBtn.textContent = "Close Ad ✕";
+      } else {
+        closeBtn.textContent = `Ad closes in ${secondsLeft}s`;
+      }
+    }, 1000);
+  }
+
+  document.getElementById("ad-close-btn").addEventListener("click", () => {
+    const overlay = document.getElementById("ad-overlay");
+    if (overlay) overlay.classList.remove("visible");
+  });
 
   // ---------------- Intro / jack toss ----------------
 
@@ -3630,6 +3730,8 @@
 
 
   function afterRoundEnds() {
+    showRoundAd();
+
     if (game.matchOver()) {
       stats.matchesPlayed++;
       setTimeout(() => {
@@ -4789,9 +4891,9 @@
 
     const team1 = state.players[0].tricks + state.players[2].tricks;
     const team2 = state.players[1].tricks + state.players[3].tricks;
-    tallyPanelText.textContent = `${team1} - ${team2}`;
+    tallyPanelText.innerHTML = `<span style="color:#5aa8ff">${team1}</span> - <span style="color:#ff6f9c">${team2}</span>`;
 
-    scorePanelText.textContent = `${state.team1Score} - ${state.team2Score}`;
+    scorePanelText.innerHTML = `<span style="color:#5aa8ff">${state.team1Score}</span> - <span style="color:#ff6f9c">${state.team2Score}</span>`;
   }
 
   function updateOnlineTurnIndicator(state) {
@@ -4890,7 +4992,17 @@
     }
   }
 
+  // Tracks the last phase we saw so the round-end ad fires exactly
+  // once per round, not on every repeated "state" broadcast while the
+  // server sits in the "round_over" phase.
+  let lastOnlinePhaseForAd = null;
+
   function renderOnlineState(state) {
+    if (state.phase === "round_over" && lastOnlinePhaseForAd !== "round_over") {
+      showRoundAd();
+    }
+    lastOnlinePhaseForAd = state.phase;
+
     // Keep everyone's peer-connection mesh current every time state
     // updates -- this is what lets a player hear the room even if they
     // never touch the mic button themselves, and lets a late joiner
@@ -5588,6 +5700,8 @@
   }
 
   function spadesResolveRoundEnd() {
+    showRoundAd();
+
     const lines = [];
 
     if (spadesGame.mode === "individual") {
