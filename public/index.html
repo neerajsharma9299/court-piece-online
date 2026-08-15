@@ -3277,8 +3277,28 @@
   // or when starting a fresh match. Non-blocking: it just overlays the
   // screen for a few seconds while the game keeps advancing normally
   // underneath, same as a typical mobile-game interstitial.
+  //
+  // Inside the Android app, window.AndroidAds is injected by
+  // MainActivity.kt and shows a real AdMob interstitial. showRoundAd()
+  // asks it first; MainActivity calls back into window.__adBridgeResult
+  // with true (a real ad was shown) or false (not loaded yet -- e.g.
+  // right after a cold start). Only on false, or when window.AndroidAds
+  // doesn't exist at all (testing in a plain desktop/mobile browser),
+  // does the in-page placeholder overlay show instead.
   let adCloseTimer = null;
+
   function showRoundAd() {
+    if (window.AndroidAds && typeof window.AndroidAds.showInterstitial === "function") {
+      window.__adBridgeResult = (realAdShown) => {
+        if (!realAdShown) showPlaceholderAd();
+      };
+      window.AndroidAds.showInterstitial();
+      return;
+    }
+    showPlaceholderAd();
+  }
+
+  function showPlaceholderAd() {
     const overlay = document.getElementById("ad-overlay");
     const closeBtn = document.getElementById("ad-close-btn");
     if (!overlay || !closeBtn) return;
