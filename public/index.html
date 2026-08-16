@@ -199,7 +199,7 @@
     #spades-your-status {
       position: absolute;
       left: 50%;
-      bottom: 144px;
+      bottom: 216px;
       transform: translateX(-50%);
       color: var(--brass-bright);
       font-family: var(--font-body);
@@ -221,7 +221,7 @@
       background: rgba(10, 20, 14, 0.72);
       border: 1.5px solid var(--brass);
       border-radius: 14px;
-      padding: 10px 18px;
+      padding: 15px 18px;
       color: var(--cream);
       text-align: center;
       backdrop-filter: blur(2px);
@@ -243,7 +243,7 @@
 
     .panel-value {
       font-family: var(--font-display);
-      font-size: 26px;
+      font-size: 30px;
       font-weight: 700;
       margin: 0;
     }
@@ -257,7 +257,7 @@
         position: absolute;
 
         /* adjust position below score panel */
-        top: 95px;
+        top: 105px;
         right: 10px;
 
         background: rgba(10, 20, 14, 0.75);
@@ -419,7 +419,7 @@
     .card {
         position: absolute;
         width: 70px;
-        height: 130px;
+        height: 150px;
         object-fit: fill;
         border-radius: 8px;
         box-shadow: 0 6px 16px rgba(0,0,0,.45);
@@ -505,8 +505,8 @@
     .suit-btn, .yesno-btn {
       font-family: var(--font-body);
       font-weight: 600;
-      font-size: 17px;
-      padding: 12px 22px;
+      font-size: 21px;
+      padding: 24px 22px;
       margin: 0 6px;
       border-radius: 10px;
       border: 1.5px solid var(--brass);
@@ -543,10 +543,10 @@
     }
     .spades-bid-num-btn {
       width: 44px;
-      height: 44px;
+      height: 50px;
       font-family: var(--font-body);
       font-weight: 700;
-      font-size: 16px;
+      font-size: 20px;
       border-radius: 8px;
       border: 1.5px solid var(--brass);
       background: rgba(10, 20, 14, 0.85);
@@ -569,7 +569,7 @@
     }
     @media (max-height: 500px) {
       .spades-bid-grid { grid-template-columns: repeat(8, 45px); gap: 10px; }
-      .spades-bid-num-btn { width: 40px; height: 45px; font-size: 13px; }
+      .spades-bid-num-btn { width: 40px; height: 50px; font-size: 20px; }
       .spades-bid-num-btn.nil-btn { font-size: 11px; }
     }
 
@@ -690,7 +690,7 @@
 
     #intro-title {
       font-family: var(--font-display);
-      font-size: 64px;
+      font-size: 74px;
       font-weight: 700;
       color: var(--brass-bright);
       letter-spacing: 0.03em;
@@ -700,9 +700,9 @@
     #intro-subtitle {
       font-family: var(--font-body);
       color: var(--cream);
-      opacity: 0.8;
-      margin: 0 0 40px;
-      font-size: 15px;
+      opacity: 2.8;
+      margin: 0 0 47px;
+      font-size: 19px;
       letter-spacing: 0.1em;
       text-transform: uppercase;
     }
@@ -718,7 +718,7 @@
     #intro-button {
       font-family: var(--font-body);
       font-weight: 600;
-      font-size: 18px;
+      font-size: 23px;
       padding: 14px 40px;
       border-radius: 10px;
       border: 1.5px solid var(--brass);
@@ -1275,7 +1275,7 @@
 
         transform: none !important;
 
-        font-size: 12px !important;
+        font-size: 16px !important;
       }
 
       /* ---- Seats ---- */
@@ -1396,16 +1396,22 @@
        HEIGHT rather than width. .full-overlay itself also always
        scrolls (see its base rule) as a hard guarantee nothing is ever
        clipped off-screen, even if these sizes need further tuning. ---------- */
-    @media (max-height: 500px) {
-      .menu-title { font-size: 26px; margin-bottom: 1px; }
-      .menu-subtitle { font-size: 10px; margin-bottom: 10px; }
+@media (max-height: 500px) {
+      .menu-title { font-size: 30px; margin-bottom: 1px; }
+      .menu-subtitle { font-size: 14px; margin-bottom: 10px; }
       .menu-grid {
         grid-template-columns: repeat(2, minmax(120px, 160px));
-        gap: 6px;
+        gap: 8px;
+      }
+      #menu-overlay .menu-grid {
+        grid-template-columns: repeat(7, minmax(90px, 120px));
+      }
+      #spades-menu-overlay .menu-grid {
+        grid-template-columns: repeat(3, minmax(90px, 140px));
       }
       .menu-btn {
-        font-size: 12px;
-        padding: 8px 10px;
+        font-size: 17px;
+        padding: 17px 10px;
         margin: 0;
       }
       .menu-grid .menu-btn {
@@ -1446,6 +1452,7 @@
       #lobby-status { font-size: 12px; }
       .lobby-divider { margin: 8px 0; }
     }
+    
 
     /* ---------- Spades mobile (mirrors the Court Piece mobile block) ---------- */
     @media (max-width: 480px) {
@@ -1512,7 +1519,7 @@
     <!-- Target Requirement Tab -->
     <div id="targetTab" class="target-hidden"></div>
 
-    <div id="trump-panel-holder" style="position:absolute; left:23%; top:95px; transform:translateX(-50%); color:var(--cream); font-family:var(--font-body); font-size:14px; z-index:5;">
+    <div id="trump-panel-holder" style="position:absolute; left:23%; top:110px; transform:translateX(-50%); color:var(--cream); font-family:var(--font-body); font-size:16px; z-index:5;">
       <span id="trump-panel-text">Trump: -</span>
     </div>
 
@@ -3100,7 +3107,7 @@
       startX = (stageWidth - totalWidth) / 2;
     }
 
-    const baseY = mobile ? window.innerHeight - 138 : 575;
+    const baseY = mobile ? window.innerHeight - 238 : 535;
 
     const myTurn = acceptingHumanClick && turnPlayer === 0;
 
@@ -4836,7 +4843,7 @@
       startX = stageWidth / 2 - totalWidth / 2;
     }
 
-    const baseY = mobile ? window.innerHeight - 138 : 600;
+    const baseY = mobile ? window.innerHeight - 238 : 550;
 
     const canPlay = state.phase === "trick" && state.turnPlayer === mySeat;
 
@@ -5859,7 +5866,7 @@
       const totalWidth = (hand.length - 1) * gap + cardW;
       startX = (stageWidth - totalWidth) / 2;
     }
-    const baseY = mobile ? window.innerHeight - 138 : 575;
+    const baseY = mobile ? window.innerHeight - 238 : 535;
 
     const myTurn = spadesAcceptingHumanClick && spadesTurnPlayer === 0;
 
