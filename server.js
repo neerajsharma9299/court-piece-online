@@ -98,6 +98,7 @@ class Room {
     this.challengeStep = 0;
     this.challengePlayerIndex = null;
     this.lastTrickWinner = null;
+    this.giveUpPending = false; // true while a "give up?" request is awaiting the opposing team's answer
   }
 
   isBotSeat(idx) {
@@ -154,7 +155,8 @@ class Room {
       poolCount: this.poolCount,
       trumpChooserIndex: this.trumpChooserIndex,
       challengePlayerIndex: this.challengePlayerIndex,
-      lastTrickWinner: this.lastTrickWinner
+      lastTrickWinner: this.lastTrickWinner,
+      giveUpPending: this.giveUpPending
     };
   }
 
@@ -246,6 +248,8 @@ function maybeStart(room) {
 function startRound(room) {
   const g = room.game;
   if (g.roundNumber > 1) g.resetRound();
+
+  room.giveUpPending = false;
 
   // FIX: jackToss() already consumed 1+ cards from the deck it was
   // using -- reusing that same (depleted) deck here, only reshuffling
@@ -476,7 +480,10 @@ function resolveRoundEnd(room) {
     const winningTeam = g.challengeTeam;
     if (winningTeam === 1) g.team1Score += 1; else g.team2Score += 1;
     room.broadcastEvent(`Team ${winningTeam} swept the round! Challenge successful.`);
-    g.rotateDealer(true);
+    // A won Court challenge is treated like a natural 13-trick sweep
+    // for dealer rotation -- deal jumps to the partner (dealer + 2),
+    // not "stays with the same dealer" like a normal successful round.
+    g.dealer = (g.dealer + 2) % 4;
   } else if (team1 === 13 || team2 === 13) {
     // Natural court -- one side swept all 13 tricks without anyone
     // ever declaring a challenge. One point only (not a court bonus
@@ -577,9 +584,69 @@ function handleMessage(room, seatIndex, msg) {
       }
       break;
     }
+    case "ask_give_up": {
+      // Only the player who actually declared Court (the trump
+      // chooser on the challenging team) can ask -- and only while a
+      // Court/13-trick challenge is genuinely in progress, and only
+      // one outstanding request at a time.
+      if (
+        room.phase !== "trick" ||
+        !g.challengeMode ||
+        g.challengePlayerIndex !== seatIndex ||
+        room.giveUpPending
+      ) break;
+
+      room.giveUpPending = true;
+      const askerName = room.names[seatIndex];
+      const opposingTeam = g.challengeTeam === 1 ? 2 : 1;
+      for (let i = 0; i < 4; i++) {
+        if (g.teamOf(i) === opposingTeam) {
+          room.send(i, { type: "give_up_request", askerName });
+        }
+      }
+      room.broadcastEvent(`${askerName} asked the other team to give up.`);
+      break;
+    }
+    case "give_up_response": {
+      if (!room.giveUpPending || room.phase !== "trick") break;
+      const opposingTeam = g.challengeTeam === 1 ? 2 : 1;
+      if (g.teamOf(seatIndex) !== opposingTeam) break; // only the challenged team may answer
+
+      room.giveUpPending = false;
+
+      if (msg.decision === "accept") {
+        resolveGivenUpRound(room);
+      } else {
+        room.broadcastEvent(`Team ${opposingTeam} declined to give up. Game continues.`);
+        room.broadcastState();
+      }
+      break;
+    }
     default:
       break;
   }
+}
+
+// The opposing team conceded a Court/13-trick challenge mid-round --
+// awards the point exactly like a normal successful challenge
+// (resolveRoundEnd's challengeMode branch) and moves straight to
+// afterRoundEnds, without waiting for the 13th trick.
+function resolveGivenUpRound(room) {
+  const g = room.game;
+  const winningTeam = g.challengeTeam;
+  if (winningTeam === 1) g.team1Score += 1; else g.team2Score += 1;
+  // Same as a fully-played-out successful challenge -- deal jumps to
+  // the partner (dealer + 2), not "stays with the same dealer".
+  g.dealer = (g.dealer + 2) % 4;
+  room.broadcastEvent(`Team ${winningTeam === 1 ? 2 : 1} gave up! Team ${winningTeam} wins the round.`);
+
+  room.currentTrick = [];
+  room.phase = "round_over";
+  room.broadcastState();
+
+  setTimeout(() => {
+    afterRoundEnds(room);
+  }, TRICK_HOLD_MS);
 }
 
 // ---------------- HTTP + WebSocket server ----------------

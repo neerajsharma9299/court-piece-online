@@ -357,6 +357,29 @@
         font-weight: bold;
         margin-top: 3px;
     }
+    /* Your own "Dealer" tag, shown above your hand -- mirrors the
+       opponents' .dealer-label under their seat name. Positioned like
+       #turn-indicator/#spades-your-status so it never overlaps them. */
+    .your-dealer-tag {
+      position: absolute;
+      left: 50%;
+      bottom: 226px;
+      transform: translateX(-50%);
+      z-index: 20;
+      background: rgba(10, 20, 14, 0.78);
+      border: 1.5px solid var(--brass);
+      border-radius: 10px;
+      padding: 4px 12px;
+      color: var(--brass-bright);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      display: none;
+    }
+    @media (max-width: 480px) {
+      .your-dealer-tag { bottom: 190px; font-size: 11px; padding: 3px 9px; }
+    }
     .seat.active-turn .seat-name {
       color: var(--brass-bright);
       text-shadow: 0 0 10px rgba(224, 189, 106, 0.7);
@@ -794,6 +817,91 @@
       }
     }
 
+    /* ---------- Menu sub-screen back button -- top-left "<" icon,
+       replaces the old bottom "Back to Menu" bar on every full-screen
+       menu (Play Online, Friends, Account, Settings, How To Play). ---------- */
+    .overlay-back-btn {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1.5px solid var(--brass);
+      background: rgba(10, 20, 14, 0.7);
+      color: var(--cream);
+      font-family: var(--font-body);
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 30;
+    }
+    .overlay-back-btn:hover { background: var(--brass-dark); }
+    @media (max-width: 480px), (max-height: 500px) {
+      .overlay-back-btn { width: 32px; height: 32px; font-size: 17px; top: 8px; left: 8px; }
+    }
+
+    /* ---------- Last Trick button (Court Piece, both modes) --
+       lives inside #stage (like the score panel) so it scales and
+       positions with the table instead of floating fixed to the
+       viewport corner. ---------- */
+    #last-trick-btn {
+      position: absolute;
+      top: 150px;
+      right: 20px;
+      z-index: 25;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1.5px solid var(--brass);
+      background: rgba(10, 20, 14, 0.8);
+      color: var(--cream);
+      cursor: pointer;
+      display: none;
+    }
+    #last-trick-btn.visible { display: block; }
+    #last-trick-btn:disabled { opacity: 0.4; cursor: default; }
+    @media (max-width: 480px) {
+      #last-trick-btn { top: 62px; right: 1vw; font-size: 9px; padding: 3px 6px; }
+    }
+    .last-trick-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .last-trick-row.winner { color: var(--brass-bright); font-weight: 700; }
+    .last-trick-card-thumb { width: 34px; height: 48px; object-fit: contain; border-radius: 4px; }
+
+    /* ---------- Ask to Give Up (Court/13-trick challenge only) ---------- */
+    #ask-give-up-btn {
+      position: fixed;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 61;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 9px 18px;
+      border-radius: 8px;
+      border: 1.5px solid var(--red-suit);
+      background: rgba(60, 14, 14, 0.85);
+      color: #ffcfc4;
+      cursor: pointer;
+    }
+    @media (max-width: 480px) {
+      #ask-give-up-btn { bottom: 8px; font-size: 11px; padding: 6px 14px; }
+    }
+
     /* ---------- Spades: redo-last-trick button (icon-only, with a small count badge) ---------- */
     #spades-redo-btn {
       position: absolute;
@@ -965,11 +1073,11 @@
     /* ---------- How to play ---------- */
 
     .how-to-play-panel {
-      background: rgba(10, 20, 14, 0.92);
-      border-radius: 18px;
-      padding: 34px 40px;
-      max-width: 560px;
-      max-height: 78vh;
+      background: transparent;
+      padding: 60px 40px 40px;
+      width: 100%;
+      max-width: 640px;
+      max-height: 92vh;
       overflow-y: auto;
       color: var(--cream);
       font-family: var(--font-body);
@@ -1032,11 +1140,11 @@
     /* ---------- Lobby ---------- */
 
     .lobby-panel {
-      background: rgba(10, 20, 14, 0.9);
-      border-radius: 18px;
-      padding: 34px 40px;
-      width: 420px;
-      max-height: 90vh;
+      background: transparent;
+      padding: 60px 40px 40px;
+      width: 100%;
+      max-width: 460px;
+      max-height: 94vh;
       overflow-y: auto;
       color: var(--cream);
       font-family: var(--font-body);
@@ -1519,6 +1627,8 @@
     <!-- Target Requirement Tab -->
     <div id="targetTab" class="target-hidden"></div>
 
+    <button id="last-trick-btn" title="Show the last completed trick" disabled>🂠 Last Trick</button>
+
     <div id="trump-panel-holder" style="position:absolute; left:23%; top:110px; transform:translateX(-50%); color:var(--cream); font-family:var(--font-body); font-size:16px; z-index:5;">
       <span id="trump-panel-text">Trump: -</span>
     </div>
@@ -1583,6 +1693,52 @@
 
 <button id="mic-toggle-btn" title="You always hear the table -- this button only controls whether they hear you">🎤 Mic</button>
 <button id="exit-game-btn" title="Exit to menu">✕ Exit</button>
+
+<!-- ============================================================
+     LAST TRICK -- shows only the most recently completed trick (all
+     4 cards + who won it). Overwritten every time a new trick
+     finishes -- never a running history. Court Piece only (bots and
+     online); Spades doesn't get one since bidding replaces this need.
+     ============================================================ -->
+<div id="last-trick-overlay" class="full-overlay" style="z-index:150; background:rgba(4,6,10,0.85);">
+  <div class="how-to-play-panel" style="max-width:380px; text-align:center;">
+    <h2 style="margin-bottom:6px;">Last Trick</h2>
+    <div id="last-trick-body" style="margin:14px 0; text-align:left;"></div>
+    <button id="last-trick-close-btn" class="menu-btn small">Close</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     ROUND RESULT -- shown right after a round ends (winner, trick
+     count, updated match score) with a "Next Round" button. Only
+     once the player presses it does the round-end ad appear -- see
+     item 6: result first, ad after, never the other way around.
+     Shared by Court Piece bots mode and online mode (Spades already
+     has its own round-summary modal, just reordered to show the ad
+     after its own Continue button instead of before).
+     ============================================================ -->
+<div id="round-result-modal" class="full-overlay" style="z-index:240;">
+  <div class="how-to-play-panel" style="text-align:center; max-width:420px;">
+    <h2 id="round-result-title">Round Result</h2>
+    <div id="round-result-body" style="text-align:left; font-size:15px; margin:14px 0;"></div>
+    <button id="round-result-next-btn" class="menu-btn primary" style="width:100%;">Next Round</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     GIVE UP (Court/13-trick challenge only) -- the trump chooser on
+     the challenging team can ask the opposing team to concede. Only
+     ever shown/enabled when a challenge (Court) round is in progress.
+     ============================================================ -->
+<button id="ask-give-up-btn" title="Ask the other team to give up (Court only)" style="display:none;">🏳 Ask to Give Up</button>
+<div id="give-up-request-modal" class="full-overlay" style="z-index:245;">
+  <div class="how-to-play-panel" style="text-align:center; max-width:380px;">
+    <h2 id="give-up-request-title">Team asked you to give up</h2>
+    <p style="margin:0 0 18px;">They're going for Court (all 13 tricks). Do you accept defeat now?</p>
+    <button id="give-up-accept-btn" class="menu-btn primary" style="width:100%; margin-bottom:8px;">Yes, we give up</button>
+    <button id="give-up-decline-btn" class="menu-btn small" style="width:100%;">No, keep playing</button>
+  </div>
+</div>
 
 <!-- ============================================================
      ROUND-END AD -- shown once after each round finishes (Court
@@ -1707,9 +1863,10 @@
   <h1 class="menu-title">Card Table</h1>
   <p class="menu-subtitle">Pick a game</p>
   <div class="menu-grid">
-    <button id="select-spades" class="menu-btn c-purple">♠ Spades</button>
-    <button id="select-court-piece" class="menu-btn c-teal">🃏 Court Piece</button>
+    <button id="select-spades" class="menu-btn c-purple">♠ Spades <span style="display:block; font-size:11px; opacity:.85; font-weight:500;">Single Sir</span></button>
+    <button id="select-court-piece" class="menu-btn c-teal">👑 Court Piece <span style="display:block; font-size:11px; opacity:.85; font-weight:500;">Double Sir</span></button>
   </div>
+  <button id="rejoin-last-room-btn" class="menu-btn c-amber" style="display:none; margin-top:16px;" type="button">🔁 Rejoin Last Room</button>
 </div>
 
 <!-- Main menu -->
@@ -1752,17 +1909,13 @@
     </button>
   </div>
 
-  <button
-      id="menu-back-to-games"
-      class="menu-btn small"
-      style="margin-top:20px">
-      ← Back
-  </button>
+  <button id="menu-back-to-games" class="overlay-back-btn" title="Back">‹</button>
 
 </div>
 
 <!-- Account -->
 <div id="account-overlay" class="full-overlay bg-account">
+  <button id="account-close-btn" class="overlay-back-btn" title="Back to Menu">‹</button>
   <div class="lobby-panel">
     <h2>Account</h2>
 
@@ -1813,13 +1966,12 @@
       </div>
       <button id="account-logout-btn" class="menu-btn small" style="width:100%; margin-top:16px;">Log Out</button>
     </div>
-
-    <button id="account-close-btn" class="menu-btn small" style="margin-top:14px;">Back to Menu</button>
   </div>
 </div>
 
 <!-- Friends -->
 <div id="friends-overlay" class="full-overlay bg-account">
+  <button id="friends-close-btn" class="overlay-back-btn" title="Back to Menu">‹</button>
   <div class="lobby-panel">
     <h2>Friends</h2>
 
@@ -1850,24 +2002,23 @@
         <ul id="online-players-list" class="friend-list"></ul>
       </div>
     </div>
-
-    <button id="friends-close-btn" class="menu-btn small" style="margin-top:14px;">Back to Menu</button>
   </div>
 </div>
 
 <!-- Settings -->
 <div id="settings-overlay" class="full-overlay bg-account">
+  <button id="settings-close-btn" class="overlay-back-btn" title="Back to Menu">‹</button>
   <div class="lobby-panel">
     <h2>Settings</h2>
     <div class="lobby-row" style="align-items:center;">
       <label style="flex:1; text-align:left; font-size:15px;">Sound effects</label>
       <input id="settings-sound-toggle" type="checkbox" style="width:22px; height:22px;">
     </div>
-    <button id="settings-close-btn" class="menu-btn small" style="margin-top:18px;">Back to Menu</button>
   </div>
 </div>
 <!-- Statistics -->
 <div id="statistics-overlay" class="full-overlay bg-account">
+  <button id="statistics-close-btn" class="overlay-back-btn" title="Back">‹</button>
   <div class="lobby-panel">
 
     <h2>📊 Statistics</h2>
@@ -1879,12 +2030,6 @@
       <p>Rounds Won: <span id="stats-rounds-won">0</span></p>
       <p>Courts: <span id="stats-courts">0</span></p>
     </div>
-
-    <button id="statistics-close-btn"
-            class="menu-btn small"
-            style="margin-top:20px;">
-      Back
-    </button>
 
   </div>
 </div>
@@ -1903,6 +2048,7 @@
 
 <!-- Spades menu -->
 <div id="spades-menu-overlay" class="full-overlay bg-spades">
+  <button id="spades-back-to-games" class="overlay-back-btn" title="Choose a different game">‹</button>
   <h1 class="menu-title">♠ Spades</h1>
   <p class="menu-subtitle">Trump is always spades</p>
   <div class="menu-grid">
@@ -1910,11 +2056,11 @@
     <button id="spades-play-team" class="menu-btn c-blue">Play - Team</button>
     <button id="spades-how-to-play" class="menu-btn c-slate">How to Play</button>
   </div>
-  <button id="spades-back-to-games" class="menu-btn small" style="margin-top:14px;">← Choose a different game</button>
 </div>
 
 <!-- Spades how to play -->
 <div id="spades-how-to-play-overlay" class="full-overlay bg-spades">
+  <button id="spades-how-to-play-close" class="overlay-back-btn" title="Close">‹</button>
   <div class="how-to-play-panel">
     <h2>How to Play Spades</h2>
     <p>Spades is a 4-player trick-taking game. Spades are <strong>always
@@ -1948,13 +2094,12 @@
       per trick bid instead. A successful Nil is worth +100; a failed Nil
       costs -100. Every 10 bags accumulated costs a 100-point penalty.
       First to the target score wins.</p>
-
-    <button id="spades-how-to-play-close" class="menu-btn small" style="margin-top: 10px;">Close</button>
   </div>
 </div>
 
 <!-- How to play -->
 <div id="how-to-play-overlay" class="full-overlay bg-court-piece">
+  <button id="how-to-play-close" class="overlay-back-btn" title="Close">‹</button>
   <div class="how-to-play-panel">
     <h2>How to Play</h2>
     <p>Court Piece is a 4-player trick-taking game, played in two fixed
@@ -1980,12 +2125,11 @@
     <p>In a normal round, the trump-holding team needs 8 of the 13
       tricks. Win all 13 and it's a "court" -- an automatic point. First
       team to 5 round points wins the match.</p>
-
-    <button id="how-to-play-close" class="menu-btn small" style="margin-top: 10px;">Close</button>
   </div>
 </div>
 
   <div id="lobby-overlay" class="full-overlay bg-lobby">
+    <button id="lobby-back" class="overlay-back-btn" title="Back to Menu">‹</button>
     <div class="lobby-panel">
 
     <h2>🌐 PLAY ONLINE</h2>
@@ -2088,14 +2232,6 @@
         </button>
 
     </div>
-
-    <button id="lobby-back"
-            class="menu-btn small"
-            style="margin-top:20px;">
-
-        ← BACK
-
-    </button>
 
   </div>
 
@@ -2538,14 +2674,18 @@
       return result;
     }
 
-    // Unified dealer-rotation rule:
-    // - Trump team succeeded -> same dealer continues.
-    // - Trump team failed:
-    //     - failing team IS the dealer's own team (only possible via a
-    //       mid-round challenge from the dealer's partner) -> new
-    //       dealer = dealer + 2 (the partner, since the dealer already
-    //       dealt this round).
-    //     - otherwise -> new dealer = dealer + 1.
+    // Dealer-rotation rule for the cases NOT already handled directly
+    // by the caller (a declared Court challenge succeeding, or a
+    // natural 13-trick sweep, both jump straight to dealer + 2 at the
+    // call site instead of going through this method):
+    // - Normal round, trump team succeeded -> same dealer continues.
+    // - Normal round, trump team failed -> dealer + 1.
+    // - Challenge failed:
+    //     - failing team IS the dealer's own team (challenger was the
+    //       dealer's partner) -> dealer + 2 (skips the partner who
+    //       just failed, straight to the opposing team).
+    //     - challenger was on the opposing team -> dealer + 1, same
+    //       as a normal failure.
     rotateDealer(trumpTeamSucceeded) {
       if (trumpTeamSucceeded) return;
 
@@ -2836,6 +2976,10 @@
     inGame = false;
     const exitBtn = document.getElementById("exit-game-btn");
     if (exitBtn) exitBtn.classList.remove("visible");
+    const lastTrickBtn = document.getElementById("last-trick-btn");
+    if (lastTrickBtn) lastTrickBtn.classList.remove("visible");
+    const giveUpBtn = document.getElementById("ask-give-up-btn");
+    if (giveUpBtn) giveUpBtn.style.display = "none";
   }
 
   const MENU_SUB_SCREENS_UNDER_COURT_PIECE = [
@@ -2901,6 +3045,7 @@
       // this same room.
       send({ type: "leave_room" });
     }
+    if (currentMode === "online") localStorage.removeItem("courtPieceInOnlineRoom");
     if (currentMode === "spades" && typeof clearSpadesSave === "function") {
       // A deliberate "yes, exit" should actually reach the menu --
       // otherwise the auto-resume feature would just reload straight
@@ -3174,14 +3319,35 @@
 
     seatEl.classList.toggle("active-turn", turnPlayer === idx);
     }
+
+    renderYourDealerTag(game.dealer === 0);
+  }
+
+  // Small "Dealer" tag shown near your own hand when you're dealing --
+  // mirrors the .dealer-label opponents get under their seat name.
+  // Reused by both bots mode and online mode (id is shared, only one
+  // stage is ever visible at a time).
+  function renderYourDealerTag(isDealer) {
+    let el = document.getElementById("your-dealer-tag");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "your-dealer-tag";
+      el.className = "your-dealer-tag";
+      el.textContent = "Dealer";
+      document.getElementById("stage").appendChild(el);
+    }
+    el.style.display = isDealer ? "block" : "none";
   }
 
   function renderHUD() {
     roundPanelText.textContent = `Round ${game.roundNumber}`;
 
     const symbol = game.trump ? SUIT_SYMBOL[game.trump] : "";
+    const chooserName = game.trump && game.trumpPlayerIndex !== null
+      ? ` <span style="opacity:.85; font-size:0.85em;">(${game.players[game.trumpPlayerIndex].name})</span>`
+      : "";
     trumpPanelText.innerHTML = game.trump
-      ? `Trump: <span style="color:${suitColor(game.trump)}">${symbol} ${game.trump}</span>`
+      ? `Trump: <span style="color:${suitColor(game.trump)}">${symbol} ${game.trump}</span>${chooserName}`
       : "Trump: -";
 
     const { team1, team2 } = game.teamTricks();
@@ -3292,6 +3458,58 @@
   // right after a cold start). Only on false, or when window.AndroidAds
   // doesn't exist at all (testing in a plain desktop/mobile browser),
   // does the in-page placeholder overlay show instead.
+  // ---------------- Last Trick tab ----------------
+  // Holds ONLY the most recently completed trick -- overwritten every
+  // time a new one finishes, never a running history. Shared by bots
+  // mode and online mode (both use the same #stage/#last-trick-btn).
+  let lastCompletedTrick = null; // { entries: [{playerIndex, card}], winnerIndex, names: [...] }
+  let pendingOnlineTrickEntries = null; // scratch var used only while an online trick is mid-resolution
+
+  function recordLastTrick(entries, winnerIndex, players) {
+    lastCompletedTrick = {
+      entries,
+      winnerIndex,
+      names: players.map((p) => p.name)
+    };
+    const btn = document.getElementById("last-trick-btn");
+    if (btn) btn.disabled = false;
+  }
+
+  function renderLastTrickOverlay() {
+    const body = document.getElementById("last-trick-body");
+    if (!body || !lastCompletedTrick) return;
+
+    body.innerHTML = "";
+    const bySeat = [...lastCompletedTrick.entries].sort((a, b) => a.playerIndex - b.playerIndex);
+
+    for (const entry of bySeat) {
+      const isWinner = entry.playerIndex === lastCompletedTrick.winnerIndex;
+      const row = document.createElement("div");
+      row.className = "last-trick-row" + (isWinner ? " winner" : "");
+
+      const img = document.createElement("img");
+      img.className = "last-trick-card-thumb";
+      img.src = cardImageSrc(entry.card);
+      img.alt = `${entry.card.rank} of ${entry.card.suit}`;
+
+      const label = document.createElement("span");
+      label.textContent = `${lastCompletedTrick.names[entry.playerIndex]}${isWinner ? " -- Won" : ""}`;
+
+      row.appendChild(img);
+      row.appendChild(label);
+      body.appendChild(row);
+    }
+  }
+
+  document.getElementById("last-trick-btn").addEventListener("click", () => {
+    if (!lastCompletedTrick) return;
+    renderLastTrickOverlay();
+    document.getElementById("last-trick-overlay").classList.add("visible");
+  });
+  document.getElementById("last-trick-close-btn").addEventListener("click", () => {
+    document.getElementById("last-trick-overlay").classList.remove("visible");
+  });
+
   let adCloseTimer = null;
 
   function showRoundAd() {
@@ -3348,6 +3566,9 @@
     introText.textContent = "Draw for dealer";
     introButton.textContent = "Draw";
     introButton.onclick = runJackToss;
+    lastCompletedTrick = null;
+    const lastTrickBtn = document.getElementById("last-trick-btn");
+    if (lastTrickBtn) { lastTrickBtn.classList.add("visible"); lastTrickBtn.disabled = true; }
   }
 
   function runJackToss() {
@@ -3614,6 +3835,8 @@
     const winnerIndex = Rules.determineWinner(playedPairs, game.trump);
     console.log("Winner Index:", winnerIndex);
 
+    recordLastTrick(currentTrick.map((e) => ({ playerIndex: e.playerIndex, card: e.card })), winnerIndex, game.players);
+
     // Keep all 4 cards visible in the center for 2 seconds
     setTimeout(() => {
 
@@ -3662,9 +3885,16 @@
 
             game.rotateDealer(false);
 
-            showRoundBanner(
-              `Team ${losingTeam} failed the challenge! Team ${capturingTeam} scores.`
-            );
+            const failMsg = `Team ${losingTeam} failed the challenge! Team ${capturingTeam} scores.`;
+            showRoundBanner(failMsg);
+
+            const { team1: t1, team2: t2 } = game.teamTricks();
+            lastRoundResultSummary = {
+              winnerTeam: capturingTeam,
+              team1Tricks: t1,
+              team2Tricks: t2,
+              message: failMsg
+            };
 
             renderHUD();
           }
@@ -3700,18 +3930,27 @@
     }, TRICK_HOLD_MS);
   }
 
+  let lastRoundResultSummary = null; // { winnerTeam, team1Tricks, team2Tricks, message }
+
   function resolveRoundEnd() {
     stats.roundsPlayed++;
 
     const { team1, team2 } = game.teamTricks();
     let team1WonRound;
+    let roundWinnerTeam;
+    let roundMessage;
 
     if (game.challengeMode) {
       const winningTeam = game.challengeTeam;
       if (winningTeam === 1) game.team1Score += 1; else game.team2Score += 1;
-      showRoundBanner(`Team ${winningTeam} swept the round! Challenge successful.`);
-      game.rotateDealer(true);
+      roundMessage = `Team ${winningTeam} swept the round! Challenge successful.`;
+      showRoundBanner(roundMessage);
+      // A won Court challenge is treated like a natural 13-trick sweep
+      // for dealer rotation -- deal jumps to the partner (dealer + 2),
+      // not "stays with the same dealer" like a normal successful round.
+      game.dealer = (game.dealer + 2) % 4;
       team1WonRound = winningTeam === 1;
+      roundWinnerTeam = winningTeam;
     } else if (team1 === 13 || team2 === 13) {
       // Natural court -- one side swept all 13 tricks without anyone
       // ever declaring a challenge. This is ONE point, not the court
@@ -3723,8 +3962,10 @@
       const courtTeam = team1 === 13 ? 1 : 2;
       if (courtTeam === 1) game.team1Score += 1; else game.team2Score += 1;
       team1WonRound = courtTeam === 1;
+      roundWinnerTeam = courtTeam;
 
-      showRoundBanner(`Team ${courtTeam} made a court!`);
+      roundMessage = `Team ${courtTeam} made a court!`;
+      showRoundBanner(roundMessage);
       game.dealer = (game.dealer + 2) % 4;
     } else {
       const trumpSucceeded = game.trumpTeam === 1 ? team1 >= 8 : team2 >= 8;
@@ -3737,6 +3978,7 @@
         msg = trumpSucceeded ? "Team 2 won the round!" : "Team 2 failed -- Team 1 wins the round!";
         if (trumpSucceeded) game.team2Score += 1; else game.team1Score += 1;
       }
+      roundMessage = msg;
 
       // Team 1 is always the human's team (seat 0) -- this is the one
       // and only "did I win this round" check, matching whichever
@@ -3744,6 +3986,7 @@
       team1WonRound =
           (game.trumpTeam === 1 && trumpSucceeded) ||
           (game.trumpTeam === 2 && !trumpSucceeded);
+      roundWinnerTeam = team1WonRound ? 1 : 2;
 
       showRoundBanner(msg);
       game.rotateDealer(trumpSucceeded);
@@ -3751,32 +3994,35 @@
 
     if (team1WonRound) stats.roundsWon++;
 
+    lastRoundResultSummary = {
+      winnerTeam: roundWinnerTeam,
+      team1Tricks: team1,
+      team2Tricks: team2,
+      message: roundMessage
+    };
+
     renderHUD();
     saveStats();
   }
 
 
   function afterRoundEnds() {
-    showRoundAd();
-
-    if (game.matchOver()) {
-      stats.matchesPlayed++;
-      setTimeout(() => {
+    const isMatchOver = game.matchOver();
+    showRoundResultModal(lastRoundResultSummary, game.team1Score, game.team2Score, isMatchOver, () => {
+      if (isMatchOver) {
+        stats.matchesPlayed++;
         const winner = game.team1Score >= 5 ? 1 : 2;
-        if (winner === 1) {
-            stats.matchesWon++;
-        }
+        if (winner === 1) stats.matchesWon++;
         saveStats();
         showRoundBanner(`🏆 TEAM ${winner} WINS THE MATCH! 🏆`, true);
         showMatchOverModal(winner, game.team1Score, game.team2Score);
-      }, ROUND_BANNER_MS - 300);
-      return;
-    }
+        return;
+      }
 
-    setTimeout(() => {
+      showRoundAd();
       game.roundNumber += 1;
       startRound();
-    }, ROUND_BANNER_MS);
+    });
   }
 
   function restartBotsMatch() {
@@ -3925,6 +4171,7 @@
     }
     localStorage.setItem("courtPieceName", username);
     syncLobbyNameField();
+    if (typeof refreshRejoinButton === "function") refreshRejoinButton();
   }
 
   function clearAuth() {
@@ -3932,7 +4179,9 @@
     authUsername = null;
     localStorage.removeItem("courtPieceAuthToken");
     localStorage.removeItem("courtPieceAuthUsername");
+    localStorage.removeItem("courtPieceInOnlineRoom");
     syncLobbyNameField();
+    if (typeof refreshRejoinButton === "function") refreshRejoinButton();
   }
 
   // Once logged in, "Your Name" in the online lobby is always the
@@ -4250,6 +4499,39 @@
       menuOverlay.classList.add("visible");
   });
 
+  // ---------------- Round Result popup (item 6: result BEFORE ad) ----------------
+  // Shown right after every completed round, before the round-end ad
+  // -- winner, this round's trick count, and the updated match score.
+  // Only once the player presses "Next Round" (or "See Final Result"
+  // on the last round of a match) does the flow continue -- to the ad
+  // + next round, or straight to the match-over screen with no ad.
+  const roundResultModal = document.getElementById("round-result-modal");
+  const roundResultTitle = document.getElementById("round-result-title");
+  const roundResultBody = document.getElementById("round-result-body");
+  const roundResultNextBtn = document.getElementById("round-result-next-btn");
+
+  function showRoundResultModal(summary, team1Score, team2Score, isMatchOver, onContinue) {
+    if (!summary) { onContinue(); return; } // defensive fallback -- should never happen
+
+    roundResultTitle.textContent = `🏆 TEAM ${summary.winnerTeam} WINS THE ROUND`;
+    roundResultBody.innerHTML = `
+      <p style="margin:4px 0;">${summary.message}</p>
+      <p style="margin:12px 0 4px; opacity:.85;">Round Result</p>
+      <p style="margin:2px 0;">Team 1: ${summary.team1Tricks} tricks</p>
+      <p style="margin:2px 0 12px;">Team 2: ${summary.team2Tricks} tricks</p>
+      <p style="margin:12px 0 4px; opacity:.85;">Match Score</p>
+      <p style="margin:2px 0;">Team 1: ${team1Score}</p>
+      <p style="margin:2px 0;">Team 2: ${team2Score}</p>
+    `;
+    roundResultNextBtn.textContent = isMatchOver ? "See Final Result" : "Next Round";
+    roundResultModal.classList.add("visible");
+
+    roundResultNextBtn.onclick = () => {
+      roundResultModal.classList.remove("visible");
+      onContinue();
+    };
+  }
+
   // ---------------- Match-over restart popup ----------------
 
   function showMatchOverModal(winnerTeam, score1, score2) {
@@ -4276,6 +4558,7 @@
     if (currentMode === "online" && socket && socket.readyState === WebSocket.OPEN) {
       send({ type: "leave_room" });
     }
+    if (currentMode === "online") localStorage.removeItem("courtPieceInOnlineRoom");
     window.location.reload();
   });
 
@@ -4341,6 +4624,52 @@
       socket.send(JSON.stringify(obj));
     }
   }
+
+  // ---------------- Item 4: return-to-room after backgrounding ----------------
+  // If the tab/app was minimized (or the socket dropped) while we were
+  // still supposed to be seated in an online room, silently reconnect
+  // the moment it becomes visible again -- the server already re-seats
+  // a reconnecting player into their existing room by playerId (see
+  // the "identify" handler in server.js), so this just has to open a
+  // fresh socket and identify; no new server logic needed for this
+  // in-session case.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible") return;
+    if (localStorage.getItem("courtPieceInOnlineRoom") !== "1") return;
+    if (socket && socket.readyState === WebSocket.OPEN) return; // still connected -- nothing to do
+    connectSocket(() => {});
+  });
+
+  // ---------------- Item 4: "Rejoin Last Room" after a full close/relaunch ----------------
+  const rejoinLastRoomBtn = document.getElementById("rejoin-last-room-btn");
+  function refreshRejoinButton() {
+    if (!rejoinLastRoomBtn) return;
+    const hasSavedRoom = localStorage.getItem("courtPieceInOnlineRoom") === "1" && isLoggedIn();
+    rejoinLastRoomBtn.style.display = hasSavedRoom ? "block" : "none";
+  }
+  if (rejoinLastRoomBtn) {
+    rejoinLastRoomBtn.addEventListener("click", () => {
+      rejoinLastRoomBtn.disabled = true;
+      rejoinLastRoomBtn.textContent = "Reconnecting...";
+      ensureConnected(() => {
+        // If the saved room no longer exists (game finished, server
+        // restarted, etc.), server sends nothing "joined"-shaped back
+        // and we just land in the normal lobby instead -- reset the
+        // flag/button after a short grace period so it doesn't linger
+        // forever pointing at a dead room.
+        setTimeout(() => {
+          rejoinLastRoomBtn.disabled = false;
+          rejoinLastRoomBtn.textContent = "🔁 Rejoin Last Room";
+          if (currentMode !== "online" || !myRoomCode) {
+            localStorage.removeItem("courtPieceInOnlineRoom");
+            refreshRejoinButton();
+          }
+        }, 4000);
+      });
+    });
+  }
+  document.addEventListener("DOMContentLoaded", refreshRejoinButton);
+  refreshRejoinButton(); // in case DOMContentLoaded already fired by the time this script runs
 
   lobbyCreateBtn.addEventListener("click", () => {
     lobbyStatus.textContent = "Connecting...";
@@ -4471,8 +4800,16 @@
     }
 
     if (msg.type === "event") {
+      lastOnlineEventText = msg.text;
       if (lobbyOverlay.classList.contains("visible")) return;
       showRoundBanner(msg.text);
+      return;
+    }
+
+    if (msg.type === "give_up_request") {
+      document.getElementById("give-up-request-title").textContent =
+        `${msg.askerName}'s team asked you to give up`;
+      document.getElementById("give-up-request-modal").classList.add("visible");
       return;
     }
 
@@ -4558,6 +4895,11 @@
     introOverlay.classList.remove("visible");
     menuOverlay.classList.remove("visible");
     micToggleBtn.style.display = "inline-block";
+    lastCompletedTrick = null;
+    pendingOnlineTrickEntries = null;
+    const lastTrickBtn = document.getElementById("last-trick-btn");
+    if (lastTrickBtn) { lastTrickBtn.classList.add("visible"); lastTrickBtn.disabled = true; }
+    localStorage.setItem("courtPieceInOnlineRoom", "1"); // item 4: lets "Rejoin Last Room" appear after a reload/relaunch
   }
 
   // ---------------- Rendering (online) ----------------
@@ -4854,7 +5196,7 @@
       positionAbs(el, startX + i * gap, baseY);
       el.style.zIndex = i;
       if (canPlay) {
-        attachPlayGesture(el, () => onOnlineCardClick(card));
+        attachPlayGesture(el, () => onOnlineCardClick(card, el));
       } else {
         el.style.cursor = "default";
       }
@@ -4897,23 +5239,29 @@
 
       // Name
       const label = seatEl.querySelector(".seat-name");
+      const dealerText = state.dealer === abs ? `<br><span class="dealer-label">Dealer</span>` : "";
       label.innerHTML = `
         ${role}
         <span class="player-real-name">
           ${player.name}${player.isBot ? " 🤖" : ""}
-        </span>
+        </span>${dealerText}
       `;
 
       // Active turn
       seatEl.classList.toggle("active-turn", state.turnPlayer === abs);
     }
+
+    renderYourDealerTag(state.dealer === mySeat);
   }
   function renderOnlineHUD(state) {
     roundPanelText.textContent = `Round ${state.roundNumber}`;
 
     const symbol = state.trump ? SUIT_SYMBOL[state.trump] : "";
+    const chooserName = state.trump && state.trumpPlayerIndex !== null && state.trumpPlayerIndex !== undefined
+      ? ` <span style="opacity:.85; font-size:0.85em;">(${state.players[state.trumpPlayerIndex].name})</span>`
+      : "";
     trumpPanelText.innerHTML = state.trump
-      ? `Trump: <span style="color:${suitColor(state.trump)}">${symbol} ${state.trump}</span>`
+      ? `Trump: <span style="color:${suitColor(state.trump)}">${symbol} ${state.trump}</span>${chooserName}`
       : "Trump: -";
 
     const team1 = state.players[0].tricks + state.players[2].tricks;
@@ -4935,6 +5283,33 @@
       el.classList.remove("visible");
     }
   }
+
+  // ---------------- Give Up (Court/13-trick challenge only, item 5) ----------------
+  // Only the player who actually declared Court (challengePlayerIndex)
+  // ever sees this button, and only while that challenge is still in
+  // progress. Hidden entirely for a normal 8-trick round.
+  function updateGiveUpButton(state) {
+    const btn = document.getElementById("ask-give-up-btn");
+    if (!btn) return;
+
+    const iAmTheChooser = state.challengeMode && state.phase === "trick" && state.challengePlayerIndex === mySeat;
+    btn.style.display = iAmTheChooser ? "block" : "none";
+    if (iAmTheChooser) btn.disabled = !!state.giveUpPending;
+  }
+
+  document.getElementById("ask-give-up-btn").addEventListener("click", () => {
+    send({ type: "ask_give_up" });
+    document.getElementById("ask-give-up-btn").disabled = true;
+  });
+
+  document.getElementById("give-up-accept-btn").addEventListener("click", () => {
+    send({ type: "give_up_response", decision: "accept" });
+    document.getElementById("give-up-request-modal").classList.remove("visible");
+  });
+  document.getElementById("give-up-decline-btn").addEventListener("click", () => {
+    send({ type: "give_up_response", decision: "decline" });
+    document.getElementById("give-up-request-modal").classList.remove("visible");
+  });
 
   function renderOnlinePoolMarker(state) {
     for (const idx of [1, 2, 3]) {
@@ -4978,9 +5353,34 @@
   let onlineTableEls = {}; // absoluteIndex -> element, cleared each trick
 
   function renderOnlineTableCards(state) {
+    // Trick just resolved (server cleared currentTrick back to []) --
+    // this MUST be checked before the normal cleanup below, or the
+    // cleanup wipes out onlineTableEls (nothing is "seen" once the
+    // trick is empty) before we ever get a chance to capture it for
+    // Last Trick or fly the cards to the winner.
+    if (state.currentTrick.length === 0 && Object.keys(onlineTableEls).length > 0 && state.lastTrickWinner !== null) {
+      if (pendingOnlineTrickEntries) {
+        recordLastTrick(pendingOnlineTrickEntries, state.lastTrickWinner, state.players);
+        pendingOnlineTrickEntries = null;
+      }
+      const target = getSeatPos()[slotFor(state.lastTrickWinner)];
+      for (const abs in onlineTableEls) {
+        const el = onlineTableEls[abs];
+        el.style.transition = "left 550ms ease-in, top 550ms ease-in";
+        positionAbs(el, target.x, target.y);
+      }
+      const flownEls = onlineTableEls;
+      onlineTableEls = {}; // detach immediately so the next trick's cards can start rendering cleanly underneath
+      setTimeout(() => {
+        for (const abs in flownEls) flownEls[abs].remove();
+      }, 650);
+      return;
+    }
+
     const seen = new Set(state.currentTrick.map((e) => e.playerIndex));
 
-    // Remove cards for players no longer in the (cleared) trick.
+    // Remove cards for players no longer in the trick (defensive --
+    // shouldn't normally happen mid-trick).
     for (const abs in onlineTableEls) {
       if (!seen.has(Number(abs))) {
         onlineTableEls[abs].remove();
@@ -5002,33 +5402,44 @@
       onlineTableEls[entry.playerIndex] = el;
     }
 
-    // Trick just resolved (server cleared currentTrick back to 0, but
-    // we still have leftover elements) -- fly them to the winner, then
-    // remove after the animation.
-    if (state.currentTrick.length === 0 && Object.keys(onlineTableEls).length > 0 && state.lastTrickWinner !== null) {
-      const target = getSeatPos()[slotFor(state.lastTrickWinner)];
-      for (const abs in onlineTableEls) {
-        const el = onlineTableEls[abs];
-        el.style.transition = "left 550ms ease-in, top 550ms ease-in";
-        positionAbs(el, target.x, target.y);
-      }
-      setTimeout(() => {
-        for (const abs in onlineTableEls) onlineTableEls[abs].remove();
-        onlineTableEls = {};
-      }, 650);
+    // Snapshot the full 4-card trick the moment it's complete -- this
+    // is the only reliable point to grab it, since the server clears
+    // state.currentTrick back to [] as soon as the trick resolves.
+    if (state.currentTrick.length === 4) {
+      pendingOnlineTrickEntries = state.currentTrick.map((e) => ({ playerIndex: e.playerIndex, card: e.card }));
     }
   }
 
-  // Tracks the last phase we saw so the round-end ad fires exactly
-  // once per round, not on every repeated "state" broadcast while the
-  // server sits in the "round_over" phase.
-  let lastOnlinePhaseForAd = null;
+  // Tracks score/phase across broadcasts so the Round Result modal
+  // (and the ad behind it) fires exactly once per completed round --
+  // see item 6: result first, ad only after "Next Round" is pressed.
+  let onlineScoreBeforeRound = null; // [team1Score, team2Score] while actively playing
+  let onlineRoundResultShown = false;
+  let lastOnlineEventText = "";
 
   function renderOnlineState(state) {
-    if (state.phase === "round_over" && lastOnlinePhaseForAd !== "round_over") {
-      showRoundAd();
+    if (state.phase !== "round_over" && state.phase !== "match_over") {
+      onlineScoreBeforeRound = [state.team1Score, state.team2Score];
+      onlineRoundResultShown = false;
     }
-    lastOnlinePhaseForAd = state.phase;
+
+    if (state.phase === "round_over" && !onlineRoundResultShown && onlineScoreBeforeRound) {
+      const scoreChanged =
+        state.team1Score !== onlineScoreBeforeRound[0] ||
+        state.team2Score !== onlineScoreBeforeRound[1];
+      if (scoreChanged) {
+        onlineRoundResultShown = true;
+        const winnerTeam = state.team1Score !== onlineScoreBeforeRound[0] ? 1 : 2;
+        const team1Tricks = state.players[0].tricks + state.players[2].tricks;
+        const team2Tricks = state.players[1].tricks + state.players[3].tricks;
+        showRoundResultModal(
+          { winnerTeam, team1Tricks, team2Tricks, message: lastOnlineEventText },
+          state.team1Score, state.team2Score,
+          false, // match-over (if this was the final round) gets its own modal separately below
+          () => showRoundAd()
+        );
+      }
+    }
 
     // Keep everyone's peer-connection mesh current every time state
     // updates -- this is what lets a player hear the room even if they
@@ -5042,6 +5453,7 @@
     renderOnlinePoolMarker(state);
     renderOnlineTableCards(state);
     updateOnlineTurnIndicator(state);
+    updateGiveUpButton(state);
 
     trumpButtonsEl.classList.toggle(
       "visible",
@@ -5107,7 +5519,7 @@
     return true;
   }
 
-  function onOnlineCardClick(card) {
+  function onOnlineCardClick(card, el) {
     if (!latestState) return;
 
     if (!isValidOnlineCard(latestState, card)) {
@@ -5116,6 +5528,23 @@
     }
 
     SoundEngine.cardClick();
+
+    // Optimistic local animation -- slide the tapped card straight to
+    // the table immediately instead of waiting for the server's next
+    // state broadcast (item 5: should feel as instant as bots mode
+    // and Spades, not laggy). renderOnlineTableCards() reconciles
+    // against this on the next broadcast -- onlineTableEls[mySeat] is
+    // already set, so it skips recreating the card instead of
+    // duplicating or jumping it.
+    if (el && mySeat !== null) {
+      el.classList.add("table-card");
+      tableCardsEl.appendChild(el);
+      const pos = getPlayPos()[0];
+      el.getBoundingClientRect(); // force reflow so the transition applies from the hand position
+      positionAbs(el, pos.x, pos.y);
+      onlineTableEls[mySeat] = el;
+    }
+
     send({ type: "play_card", rank: card.rank, suit: card.suit });
   }
 
@@ -5727,8 +6156,6 @@
   }
 
   function spadesResolveRoundEnd() {
-    showRoundAd();
-
     const lines = [];
 
     if (spadesGame.mode === "individual") {
@@ -5803,6 +6230,7 @@
       if (matchOver) {
         spadesShowMatchOver();
       } else {
+        showRoundAd();
         spadesGame.dealer = (spadesGame.dealer + 1) % 4;
         spadesGame.roundNumber += 1;
         spadesStartRound();
@@ -6076,6 +6504,7 @@
         if (saved.pendingSummary.matchOver) {
           spadesShowMatchOver();
         } else {
+          showRoundAd();
           spadesGame.dealer = (spadesGame.dealer + 1) % 4;
           spadesGame.roundNumber += 1;
           spadesStartRound();
